@@ -1,5 +1,10 @@
 import os
 
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 class Config:
     """Base Aurevia application configuration."""
@@ -13,6 +18,10 @@ class Config:
         "AUREVIA_DATABASE_URL",
         "",
     )
+
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     FLASK_ENV = os.getenv(
         "FLASK_ENV",
