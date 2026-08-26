@@ -1,0 +1,286 @@
+# ============================================================
+# AUREVIA
+# AI-Powered Rehabilitation Platform
+# Root Git Ignore
+# ============================================================
+
+
+# ============================================================
+# ENVIRONMENT VARIABLES & SECRETS
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+
+# ============================================================
+# PYTHON
+# ============================================================
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.hypothesis/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Backend virtual environment
+backend/.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# ============================================================
+# NODE / REACT / VITE
+# ============================================================
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+build/
+frontend/build/
+
+# Vite
+.vite/
+frontend/.vite/
+
+# npm logs
+npm-debug.log*
+npm-error.log*
+
+# Yarn logs
+yarn-debug.log*
+yarn-error.log*
+yarn-error.log
+
+# pnpm logs
+pnpm-debug.log*
+
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+
+
+# ============================================================
+# JAVASCRIPT / TYPESCRIPT
+# ============================================================
+
+# TypeScript build information
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# Stylelint cache
+.stylelintcache
+
+
+# ============================================================
+# MACHINE LEARNING / MODEL OUTPUTS
+# ============================================================
+
+# Trained model files
+*.h5
+*.keras
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.pb
+
+# TensorFlow / Keras generated directories
+checkpoint/
+saved_model/
+logs/
+
+# Experiment outputs
+runs/
+wandb/
+mlruns/
+
+# Generated predictions / outputs
+predictions/
+outputs/
+results/
+
+
+# ============================================================
+# DATA / DATABASE LOCAL ARTIFACTS
+# ============================================================
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Local database dumps
+*.sql.gz
+
+# Temporary datasets
+*.tmp
+*.temp
+
+
+# ============================================================
+# LOGS
+# ============================================================
+
+*.log
+logs/
+
+
+# ============================================================
+# IDE / EDITOR
+# ============================================================
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Visual Studio
+.vs/
+
+# JetBrains
+.idea/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+
+
+# ============================================================
+# OPERATING SYSTEM
+# ============================================================
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+
+# ============================================================
+# TEMPORARY / BACKUP FILES
+# ============================================================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary folders
+tmp/
+temp/
+
+
+# ============================================================
+# TEST / DEVELOPMENT ARTIFACTS
+# ============================================================
+
+test-results/
+playwright-report/
+blob-report/
+.nyc_output/
+
+
+# ============================================================
+# LOCAL AI / CAMERA ARTIFACTS
+# ============================================================
+
+# Captured webcam frames
+captures/
+camera_frames/
+
+# Generated pose data
+pose_outputs/
+landmark_outputs/
+
+# Local session recordings
+recordings/
+
+
+# ============================================================
+# AUREVIA-SPECIFIC LOCAL FILES
+# ============================================================
+
+# Local configuration
+config.local.*
+settings.local.*
+
+# Local development data
+data/local/
+database/local/
+
+# Local generated reports
+reports/generated/
+
+
+# ============================================================
+# DO NOT IGNORE AUREVIA SOURCE CODE
+# ============================================================
+# ai/
+# backend/
+# frontend/
+# tests/
+#
+# These directories intentionally remain TRACKED.
+# Their internal caches/artifacts are ignored by the rules above.
