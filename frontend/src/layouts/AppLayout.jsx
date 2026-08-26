@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import './AppLayout.css';
 
 function AppLayout() {
   return (
