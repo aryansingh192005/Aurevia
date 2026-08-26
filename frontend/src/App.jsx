@@ -1,49 +1,38 @@
-import { useEffect, useState } from 'react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
 
-import { getHealth } from './services/api';
+import AppLayout from './layouts/AppLayout';
+
+import Home from './pages/Home/Home';
+import Login from './pages/Login/Login';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Exercises from './pages/Exercises/Exercises';
+import Sessions from './pages/Sessions/Sessions';
+import Progress from './pages/Progress/Progress';
 
 function App() {
-  const [backendStatus, setBackendStatus] = useState('checking');
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function checkBackend() {
-      try {
-        const data = await getHealth();
-
-        if (isMounted && data.status === 'ok') {
-          setBackendStatus('connected');
-        } else if (isMounted) {
-          setBackendStatus('error');
-        }
-      } catch (error) {
-        if (isMounted) {
-          setBackendStatus('offline');
-        }
-      }
-    }
-
-    checkBackend();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   return (
-    <main>
-      <h1>Aurevia</h1>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/exercises" element={<Exercises />} />
+          <Route path="/sessions" element={<Sessions />} />
+          <Route path="/progress" element={<Progress />} />
+        </Route>
 
-      <p>AI-Powered Rehabilitation Platform</p>
-
-      <p>
-        Backend:{' '}
-        <strong>
-          {backendStatus}
-        </strong>
-      </p>
-    </main>
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
