@@ -1,7 +1,7 @@
 from flask import Flask
 
 from app.config.settings import Config
-from app.extensions import db
+from app.extensions import db, migrate
 
 
 def create_app():
@@ -9,6 +9,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    migrate.init_app(app, db)
 
     from app import models  # noqa: F401
 
