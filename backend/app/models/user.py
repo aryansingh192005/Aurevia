@@ -28,6 +28,12 @@ class User(db.Model):
         nullable=False,
     )
 
+    role = db.Column(
+        db.String(20),
+        nullable=False,
+        default="patient",
+    )
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -52,3 +58,17 @@ class User(db.Model):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+
+    assigned_exercises = db.relationship(
+    "ExerciseAssignment",
+    foreign_keys="ExerciseAssignment.patient_id",
+    back_populates="patient",
+    cascade="all, delete-orphan",
+)
+
+    created_assignments = db.relationship(
+    "ExerciseAssignment",
+    foreign_keys="ExerciseAssignment.therapist_id",
+    back_populates="therapist",
+    cascade="all, delete-orphan",
+)

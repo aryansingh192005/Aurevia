@@ -48,3 +48,9 @@ class Exercise(db.Model):
         "RehabilitationSession",
         back_populates="exercise",
     )
+
+    assignments = db.relationship(
+    "ExerciseAssignment",
+    back_populates="exercise",
+    cascade="all, delete-orphan",
+)

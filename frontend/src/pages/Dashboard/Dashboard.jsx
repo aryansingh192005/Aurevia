@@ -1,83 +1,33 @@
-import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
-import Button from '../../components/Button/Button';
-import Card from '../../components/Card/Card';
-import StatusBadge from '../../components/StatusBadge/StatusBadge';
-import { getHealth } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
-function Dashboard() {
-  const [backendStatus, setBackendStatus] = useState('checking');
+function DashboardRedirect() {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    let isMounted = true;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
-    async function checkBackend() {
-      try {
-        const data = await getHealth();
+  if (user.role === 'patient') {
+    return (
+      <Navigate
+        to="/patient/dashboard"
+        replace
+      />
+    );
+  }
 
-        if (!isMounted) {
-          return;
-        }
+  if (user.role === 'therapist') {
+    return (
+      <Navigate
+        to="/therapist/dashboard"
+        replace
+      />
+    );
+  }
 
-        if (data.status === 'ok') {
-          setBackendStatus('connected');
-        } else {
-          setBackendStatus('offline');
-        }
-      } catch {
-        if (isMounted) {
-          setBackendStatus('offline');
-        }
-      }
-    }
-
-    checkBackend();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const statusConfig = {
-    checking: {
-      status: 'neutral',
-      label: 'Checking backend...',
-    },
-    connected: {
-      status: 'success',
-      label: 'Backend connected',
-    },
-    offline: {
-      status: 'danger',
-      label: 'Backend offline',
-    },
-  };
-
-  const currentStatus = statusConfig[backendStatus];
-
-  return (
-    <section>
-      <h1>Dashboard</h1>
-
-      <p>
-        Your rehabilitation overview will appear here.
-      </p>
-
-      <Card>
-        <h2>System Status</h2>
-
-        <StatusBadge status={currentStatus.status}>
-          {currentStatus.label}
-        </StatusBadge>
-
-        <div style={{ marginTop: '16px' }}>
-          <Button>
-            Start Rehabilitation Session
-          </Button>
-        </div>
-      </Card>
-    </section>
-  );
+  return <Navigate to="/" replace />;
 }
 
-export default Dashboard;
+export default DashboardRedirect;

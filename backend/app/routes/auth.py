@@ -1,15 +1,41 @@
 from flask import Blueprint, jsonify, request
+
 from sqlalchemy.exc import IntegrityError
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
 
 from app.extensions import db
 from app.models import User
+from app.services.auth import (
+    get_current_user,
+    login_user,
+    logout_user,
+    require_auth,
+)
 
 
 auth_bp = Blueprint(
     "auth",
     __name__,
 )
+
+
+VALID_ROLES = {
+    "patient",
+    "therapist",
+}
+
+
+def serialize_user(user):
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "created_at": user.created_at.isoformat(),
+    }
 
 
 @auth_bp.post("/auth/register")
@@ -19,6 +45,7 @@ def register():
     name = data.get("name")
     email = data.get("email")
     password = data.get("password")
+    role = data.get("role", "patient")
 
     if not name or not email or not password:
         return jsonify(
@@ -30,10 +57,22 @@ def register():
     name = name.strip()
     email = email.strip().lower()
 
+    if isinstance(role, str):
+        role = role.strip().lower()
+    else:
+        role = ""
+
     if not name or not email:
         return jsonify(
             {
                 "error": "name and email cannot be empty",
+            }
+        ), 400
+
+    if role not in VALID_ROLES:
+        return jsonify(
+            {
+                "error": "role must be patient or therapist",
             }
         ), 400
 
@@ -59,6 +98,7 @@ def register():
         name=name,
         email=email,
         password_hash=generate_password_hash(password),
+        role=role,
     )
 
     db.session.add(user)
@@ -74,16 +114,14 @@ def register():
             }
         ), 409
 
+    login_user(user)
+
     return jsonify(
         {
-            "user": {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "created_at": user.created_at.isoformat(),
-            }
+            "user": serialize_user(user),
         }
     ), 201
+
 
 @auth_bp.post("/auth/login")
 def login():
@@ -122,13 +160,32 @@ def login():
             }
         ), 401
 
+    login_user(user)
+
     return jsonify(
         {
-            "user": {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "created_at": user.created_at.isoformat(),
-            }
+            "user": serialize_user(user),
+        }
+    ), 200
+
+
+@auth_bp.get("/auth/me")
+@require_auth
+def me(user):
+    return jsonify(
+        {
+            "user": serialize_user(user),
+        }
+    ), 200
+
+
+@auth_bp.post("/auth/logout")
+@require_auth
+def logout(user):
+    logout_user()
+
+    return jsonify(
+        {
+            "message": "logged out successfully",
         }
     ), 200
