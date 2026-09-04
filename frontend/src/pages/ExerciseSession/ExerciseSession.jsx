@@ -1,14 +1,39 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import {
+  Award,
+  CheckCircle2,
+  ChevronLeft,
+  Flame,
+  PlayCircle,
+  Target,
+  Timer,
+} from 'lucide-react';
 
 import api from '../../services/api';
+import Card from '../../components/Card/Card';
+import Button from '../../components/Button/Button';
+import Alert from '../../components/Alert/Alert';
+import Spinner from '../../components/Spinner/Spinner';
+import PoseCamera from '../../components/PoseCamera/PoseCamera';
+
+import './ExerciseSession.css';
+
+const STEPS = ['created', 'started', 'completed'];
+
+function stepIndex(status) {
+  const index = STEPS.indexOf(status);
+  return index === -1 ? -1 : index;
+}
 
 function ExerciseSession() {
   const { assignmentId } = useParams();
-  const navigate = useNavigate();
+  const poseCameraRef = useRef(null);
 
   const [assignment, setAssignment] = useState(null);
   const [session, setSession] = useState(null);
+  const [liveStats, setLiveStats] = useState(null);
+  const [finalResult, setFinalResult] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -24,28 +49,20 @@ function ExerciseSession() {
 
     async function loadAssignment() {
       try {
-        const response = await api.get(
-          `/assignments/${assignmentId}`,
-        );
+        const response = await api.get(`/assignments/${assignmentId}`);
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         setAssignment(response.data.assignment);
       } catch (requestError) {
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         setError(
           requestError.response?.data?.error ||
             'Unable to load this exercise assignment.',
         );
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -57,16 +74,14 @@ function ExerciseSession() {
   }, [assignmentId]);
 
   async function createSession() {
-    if (!assignment) {
-      return;
-    }
+    if (!assignment) return;
 
     setIsCreating(true);
     setError('');
 
     try {
       const response = await api.post('/sessions', {
-        exercise_id: assignment.exercise.id,
+        assignment_id: assignment.id,
       });
 
       setSession(response.data.session);
@@ -81,20 +96,15 @@ function ExerciseSession() {
   }
 
   async function beginRehabilitation() {
-    if (!session) {
-      return;
-    }
+    if (!session) return;
 
     setIsStarting(true);
     setError('');
 
     try {
-      const response = await api.patch(
-        `/sessions/${session.id}`,
-        {
-          status: 'started',
-        },
-      );
+      const response = await api.patch(`/sessions/${session.id}`, {
+        status: 'started',
+      });
 
       setSession(response.data.session);
     } catch (requestError) {
@@ -108,20 +118,22 @@ function ExerciseSession() {
   }
 
   async function completeSession() {
-    if (!session) {
-      return;
+    if (!session) return;
+
+    // Capture the AI-tracked summary the moment the patient finishes,
+    // before the camera unmounts.
+    const summary = poseCameraRef.current?.getSummary();
+    if (summary) {
+      setFinalResult(summary);
     }
 
     setIsCompleting(true);
     setError('');
 
     try {
-      const response = await api.patch(
-        `/sessions/${session.id}`,
-        {
-          status: 'completed',
-        },
-      );
+      const response = await api.patch(`/sessions/${session.id}`, {
+        status: 'completed',
+      });
 
       setSession(response.data.session);
     } catch (requestError) {
@@ -135,28 +147,24 @@ function ExerciseSession() {
   }
 
   async function submitResult() {
-    if (!session || session.status !== 'completed') {
-      return;
-    }
+    if (!session || session.status !== 'completed') return;
 
     setIsSubmittingResult(true);
     setError('');
 
+    const resultData = finalResult || {
+      repetitions: 0,
+      correct_repetitions: 0,
+      incorrect_repetitions: 0,
+      accuracy: 0,
+      feedback: 'No AI tracking data was captured for this session.',
+    };
+
     try {
-      await api.post(
-        `/sessions/${session.id}/results`,
-        {
-          result_type: 'exercise_analysis',
-          result_data: {
-            repetitions: assignment.target_reps ?? 10,
-            correct_repetitions: assignment.target_reps ?? 10,
-            incorrect_repetitions: 0,
-            accuracy: 100,
-            feedback:
-              'Mock result for frontend and backend integration testing.',
-          },
-        },
-      );
+      await api.post(`/sessions/${session.id}/results`, {
+        result_type: 'exercise_analysis',
+        result_data: resultData,
+      });
 
       setResultSubmitted(true);
     } catch (requestError) {
@@ -170,220 +178,225 @@ function ExerciseSession() {
   }
 
   if (isLoading) {
-    return (
-      <section>
-        <h1>Exercise Session</h1>
-        <p>Loading your exercise...</p>
-      </section>
-    );
+    return <Spinner label="Loading your exercise..." fullPage />;
   }
 
   if (error && !assignment) {
     return (
-      <section>
-        <h1>Exercise Session</h1>
-
-        <p role="alert">{error}</p>
-
+      <div className="session-error">
+        <Alert variant="error">{error}</Alert>
         <Link to="/patient/exercises">
-          Back to Exercises
+          <Button variant="secondary" icon={<ChevronLeft size={16} />}>
+            Back to Exercises
+          </Button>
         </Link>
-      </section>
+      </div>
     );
   }
 
-  if (!assignment) {
-    return null;
-  }
+  if (!assignment) return null;
 
   const exercise = assignment.exercise;
+  const activeStep = session ? stepIndex(session.status) : -1;
+  const isLive = Boolean(session && session.status === 'started');
 
   return (
-    <section>
-      <h1>{exercise.name}</h1>
+    <div className="exercise-session">
+      <Link to="/patient/exercises" className="session-back-link">
+        <ChevronLeft size={16} /> Back to Exercises
+      </Link>
 
-      <p>
-        Your rehabilitation exercise session.
-      </p>
+      <div className="session-hero">
+        <h1>{exercise.name}</h1>
+        <p>Your rehabilitation exercise session.</p>
+      </div>
 
-      <article>
-        <h2>Exercise Details</h2>
+      <div className="session-layout">
+        <Card className="session-details">
+          <h2>Exercise Details</h2>
+          <p className="session-details__description">{exercise.description}</p>
 
-        <p>{exercise.description}</p>
-
-        <p>
-          <strong>Target area:</strong>{' '}
-          {exercise.target_area}
-        </p>
-
-        <p>
-          <strong>Difficulty:</strong>{' '}
-          {exercise.difficulty}
-        </p>
-
-        <p>
-          <strong>Target sets:</strong>{' '}
-          {assignment.target_sets ?? 'Not specified'}
-        </p>
-
-        <p>
-          <strong>Target repetitions:</strong>{' '}
-          {assignment.target_reps ?? 'Not specified'}
-        </p>
-
-        <p>
-          <strong>Assignment status:</strong>{' '}
-          {assignment.status}
-        </p>
-      </article>
-
-      {error && (
-        <p role="alert">
-          {error}
-        </p>
-      )}
-
-      {!session && (
-        <div>
-          <h2>Ready to Begin?</h2>
-
-          <p>
-            Create a rehabilitation session for this
-            assigned exercise.
-          </p>
-
-          <button
-            type="button"
-            onClick={createSession}
-            disabled={isCreating}
-          >
-            {isCreating
-              ? 'Creating Session...'
-              : 'Create Session'}
-          </button>
-        </div>
-      )}
-
-      {session && session.status === 'created' && (
-        <div>
-          <h2>Session Created</h2>
-
-          <p>
-            <strong>Session ID:</strong>{' '}
-            {session.id}
-          </p>
-
-          <p>
-            <strong>Status:</strong>{' '}
-            {session.status}
-          </p>
-
-          <button
-            type="button"
-            onClick={beginRehabilitation}
-            disabled={isStarting}
-          >
-            {isStarting
-              ? 'Starting...'
-              : 'Begin Rehabilitation'}
-          </button>
-        </div>
-      )}
-
-      {session && session.status === 'started' && (
-        <div>
-          <h2>Rehabilitation In Progress</h2>
-
-          <p>
-            Session #{session.id} is currently active.
-          </p>
-
-          <p>
-            Camera and AI movement analysis will be
-            connected here.
-          </p>
-
-          <p>
-            The AI module will eventually analyze
-            movement and generate the session result.
-          </p>
-
-          <button
-            type="button"
-            onClick={completeSession}
-            disabled={isCompleting}
-          >
-            {isCompleting
-              ? 'Completing Session...'
-              : 'Finish Session'}
-          </button>
-        </div>
-      )}
-
-      {session && session.status === 'completed' && (
-        <div>
-          <h2>Session Completed</h2>
-
-          <p>
-            Your rehabilitation session has been
-            completed successfully.
-          </p>
-
-          <p>
-            <strong>Completed at:</strong>{' '}
-            {session.completed_at
-              ? new Date(
-                  session.completed_at,
-                ).toLocaleString()
-              : 'Not available'}
-          </p>
-
-          {!resultSubmitted ? (
+          <div className="session-details__meta">
             <div>
-              <p>
-                The AI analysis result is not connected
-                yet, so you can submit a temporary test
-                result.
-              </p>
-
-              <button
-                type="button"
-                onClick={submitResult}
-                disabled={isSubmittingResult}
-              >
-                {isSubmittingResult
-                  ? 'Submitting Result...'
-                  : 'Submit Test Result'}
-              </button>
+              <Target size={16} />
+              <span>
+                <strong>Target Area</strong>
+                {exercise.target_area || 'General'}
+              </span>
             </div>
-          ) : (
             <div>
-              <h3>Result Submitted</h3>
+              <Flame size={16} />
+              <span>
+                <strong>Difficulty</strong>
+                {exercise.difficulty || 'Any level'}
+              </span>
+            </div>
+            <div>
+              <Award size={16} />
+              <span>
+                <strong>Target Sets</strong>
+                {assignment.target_sets ?? 'Not specified'}
+              </span>
+            </div>
+            <div>
+              <Timer size={16} />
+              <span>
+                <strong>Target Reps</strong>
+                {assignment.target_reps ?? 'Not specified'}
+              </span>
+            </div>
+          </div>
 
-              <p>
-                The rehabilitation result was saved
-                successfully.
-              </p>
-
-              <Link to="/patient/sessions">
-                View Session History
-              </Link>
+          {(session?.status === 'started' || session?.status === 'completed') && (
+            <div className="session-ai-camera">
+              <PoseCamera
+                ref={poseCameraRef}
+                targetArea={exercise.target_area}
+                active={isLive}
+                onUpdate={setLiveStats}
+                sessionId={session.id}
+              />
             </div>
           )}
-        </div>
-      )}
+        </Card>
 
-      <div>
-        <button
-          type="button"
-          onClick={() =>
-            navigate('/patient/exercises')
-          }
-        >
-          Back to Exercises
-        </button>
+        <Card className="session-flow">
+          <ol className="session-stepper">
+            {['Create', 'Perform', 'Complete'].map((label, index) => (
+              <li
+                key={label}
+                className={
+                  activeStep > index || (activeStep === index && session?.status === 'completed')
+                    ? 'is-done'
+                    : activeStep === index
+                      ? 'is-active'
+                      : ''
+                }
+              >
+                <span className="session-stepper__dot">
+                  {activeStep > index ? <CheckCircle2 size={14} /> : index + 1}
+                </span>
+                {label}
+              </li>
+            ))}
+          </ol>
+
+          {error && <Alert variant="error">{error}</Alert>}
+
+          {!session && (
+            <div className="session-panel">
+              <h3>Ready to Begin?</h3>
+              <p>Create a rehabilitation session for this assigned exercise.</p>
+              <Button onClick={createSession} loading={isCreating} icon={<PlayCircle size={16} />}>
+                Create Session
+              </Button>
+            </div>
+          )}
+
+          {session && session.status === 'created' && (
+            <div className="session-panel">
+              <h3>Session Created</h3>
+              <p>
+                Session <strong>#{session.id}</strong> is ready. Position yourself in front of
+                your camera, full body visible, then begin when set.
+              </p>
+              <Button onClick={beginRehabilitation} loading={isStarting} icon={<PlayCircle size={16} />}>
+                Begin Rehabilitation
+              </Button>
+            </div>
+          )}
+
+          {session && session.status === 'started' && (
+            <div className="session-panel">
+              <div className="session-live-indicator">
+                <span className="session-live-dot" />
+                Session #{session.id} in progress
+              </div>
+
+              <p>
+                Aurevia's AI is tracking your joints live through your camera and counting
+                reps automatically.
+              </p>
+
+              <p className="session-panel__disclosure">
+                Only joint-angle measurements (no video or images) from this session may be
+                used, in de-identified form, to help improve Aurevia's exercise-evaluation AI.
+              </p>
+
+              {liveStats && (
+                <div className="live-stats">
+                  <div>
+                    <span className="live-stats__value">{liveStats.reps ?? 0}</span>
+                    <span className="live-stats__label">Reps</span>
+                  </div>
+                  <div>
+                    <span className="live-stats__value">{liveStats.correctReps ?? 0}</span>
+                    <span className="live-stats__label">Correct</span>
+                  </div>
+                  <div>
+                    <span className="live-stats__value">{liveStats.incorrectReps ?? 0}</span>
+                    <span className="live-stats__label">Off-form</span>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={completeSession} loading={isCompleting} variant="energy" icon={<CheckCircle2 size={16} />}>
+                Finish Session
+              </Button>
+            </div>
+          )}
+
+          {session && session.status === 'completed' && (
+            <div className="session-panel">
+              <h3>Session Completed</h3>
+              <p>
+                Completed at{' '}
+                {session.completed_at
+                  ? new Date(session.completed_at).toLocaleString()
+                  : 'not available'}
+                .
+              </p>
+
+              {!resultSubmitted ? (
+                <>
+                  {finalResult ? (
+                    <div className="live-stats live-stats--summary">
+                      <div>
+                        <span className="live-stats__value">{finalResult.repetitions}</span>
+                        <span className="live-stats__label">Total Reps</span>
+                      </div>
+                      <div>
+                        <span className="live-stats__value">{finalResult.accuracy}%</span>
+                        <span className="live-stats__label">Accuracy</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="session-panel__note">
+                      No AI tracking data was captured — camera may not have been active.
+                    </p>
+                  )}
+
+                  <Button
+                    onClick={submitResult}
+                    loading={isSubmittingResult}
+                    icon={<Award size={16} />}
+                  >
+                    Submit AI Result
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Alert variant="success">Result saved successfully.</Alert>
+                  <Link to="/sessions">
+                    <Button variant="secondary">View Session History</Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+        </Card>
       </div>
-    </section>
+    </div>
   );
 }
 

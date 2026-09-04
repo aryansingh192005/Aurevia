@@ -1,49 +1,98 @@
 .aurevia-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
 
-  min-height: 42px;
   padding: var(--space-2) var(--space-5);
 
   border: 1px solid transparent;
   border-radius: var(--radius-md);
 
-  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
     color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
 
-  cursor: pointer;
+.aurevia-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .aurevia-button:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
+.aurevia-button--full {
+  width: 100%;
+}
+
+/* Sizes */
+.aurevia-button--sm {
+  min-height: 34px;
+  padding: var(--space-1) var(--space-4);
+  font-size: var(--font-size-xs);
+}
+
+.aurevia-button--md {
+  min-height: 44px;
+  font-size: var(--font-size-sm);
+}
+
+.aurevia-button--lg {
+  min-height: 52px;
+  padding: var(--space-3) var(--space-8);
+  font-size: var(--font-size-md);
+  border-radius: var(--radius-lg);
+}
+
+/* Variants */
 .aurevia-button--primary {
   color: var(--color-neutral-0);
-  background: var(--color-primary-600);
+  background: var(--gradient-brand);
+  box-shadow: var(--shadow-glow);
 }
 
 .aurevia-button--primary:hover:not(:disabled) {
-  background: var(--color-primary-700);
+  filter: brightness(1.08);
+  box-shadow: 0 16px 36px rgb(126 20 255 / 0.32);
 }
 
 .aurevia-button--secondary {
   color: var(--color-neutral-700);
   background: var(--color-neutral-0);
-  border-color: var(--color-neutral-300);
+  border-color: var(--color-neutral-200);
 }
 
 .aurevia-button--secondary:hover:not(:disabled) {
   background: var(--color-neutral-100);
+  border-color: var(--color-neutral-300);
+}
+
+.aurevia-button--ghost {
+  color: var(--color-primary-600);
+  background: transparent;
+}
+
+.aurevia-button--ghost:hover:not(:disabled) {
+  background: var(--color-primary-50);
+}
+
+.aurevia-button--energy {
+  color: var(--color-neutral-0);
+  background: var(--gradient-energy);
+  box-shadow: 0 12px 28px rgb(255 94 126 / 0.3);
+}
+
+.aurevia-button--energy:hover:not(:disabled) {
+  filter: brightness(1.06);
 }
 
 .aurevia-button--danger {
@@ -54,4 +103,13 @@
 
 .aurevia-button--danger:hover:not(:disabled) {
   background: #fee2e2;
+}
+
+.aurevia-button__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.aurevia-button__spinner {
+  animation: spin 0.8s linear infinite;
 }

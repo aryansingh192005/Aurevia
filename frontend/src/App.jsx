@@ -27,6 +27,7 @@ import TherapistDashboard from './pages/TherapistDashboard/TherapistDashboard';
 import TherapistPatients from './pages/TherapistPatients/TherapistPatients';
 import AssignExercise from './pages/AssignExercise/AssignExercise';
 import TherapistResults from './pages/TherapistResults/TherapistResults';
+import TherapistReview from './pages/TherapistReview/TherapistReview';
 
 function App() {
   return (
@@ -87,6 +88,11 @@ function App() {
             <Route
               path="/therapist/sessions"
               element={<TherapistResults />}
+            />
+
+            <Route
+              path="/therapist/review"
+              element={<TherapistReview />}
             />
           </Route>
 

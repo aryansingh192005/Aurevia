@@ -1,27 +1,50 @@
 :root {
-  /* Brand */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
+  /* Brand — purple to blue, matches the Aurevia mark */
+  --color-primary-50: #f5eeff;
+  --color-primary-100: #ede6ff;
+  --color-primary-200: #d8c2ff;
+  --color-primary-300: #b98bff;
+  --color-primary-400: #9a5aff;
+  --color-primary-500: #863bff;
+  --color-primary-600: #7e14ff;
+  --color-primary-700: #6a0fe0;
+  --color-primary-800: #560cb8;
+
+  --color-accent-300: #8fdcff;
+  --color-accent-400: #6acdff;
+  --color-accent-500: #47bfff;
+  --color-accent-600: #1fa3ec;
+
+  --color-energy-400: #ff8f6b;
+  --color-energy-500: #ff6b45;
+  --color-energy-600: #f34e26;
+
+  --gradient-brand: linear-gradient(135deg, #7e14ff 0%, #a239ff 45%, #47bfff 100%);
+  --gradient-brand-soft: linear-gradient(135deg, #f5eeff 0%, #eaf7ff 100%);
+  --gradient-energy: linear-gradient(135deg, #ff8f6b 0%, #ff5e7e 100%);
+  --gradient-hero: radial-gradient(circle at 15% 20%, rgba(126, 20, 255, 0.35), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(71, 191, 255, 0.3), transparent 40%),
+    linear-gradient(160deg, #1a0b3d 0%, #2d0f5e 45%, #170a35 100%);
 
   /* Neutral */
   --color-neutral-0: #ffffff;
-  --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-200: #e2e8f0;
-  --color-neutral-300: #cbd5e1;
-  --color-neutral-500: #64748b;
-  --color-neutral-700: #334155;
-  --color-neutral-900: #0f172a;
+  --color-neutral-50: #f8f7fc;
+  --color-neutral-100: #f1eef9;
+  --color-neutral-200: #e4defa;
+  --color-neutral-300: #cdc3e8;
+  --color-neutral-400: #a79bc4;
+  --color-neutral-500: #6f6489;
+  --color-neutral-600: #524a68;
+  --color-neutral-700: #3a3452;
+  --color-neutral-800: #241f38;
+  --color-neutral-900: #14101f;
 
   /* Semantic */
-  --color-success-50: #f0fdf4;
+  --color-success-50: #edfdf5;
   --color-success-500: #22c55e;
   --color-success-700: #15803d;
 
-  --color-warning-50: #fffbeb;
+  --color-warning-50: #fffaeb;
   --color-warning-500: #f59e0b;
   --color-warning-700: #b45309;
 
@@ -31,12 +54,17 @@
 
   /* Typography */
   --font-family-base:
+    "Plus Jakarta Sans",
     Inter,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
+  --font-family-display:
+    "Sora",
+    var(--font-family-base);
 
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
@@ -46,11 +74,13 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -63,30 +93,36 @@
   --space-10: 2.5rem;
   --space-12: 3rem;
   --space-16: 4rem;
+  --space-20: 5rem;
 
   /* Radius */
   --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
   --radius-full: 9999px;
 
   /* Shadows */
   --shadow-sm:
-    0 1px 2px rgb(15 23 42 / 0.05);
+    0 1px 2px rgb(20 16 31 / 0.06);
 
   --shadow-md:
-    0 4px 12px rgb(15 23 42 / 0.08);
+    0 8px 20px rgb(20 16 31 / 0.08);
 
   --shadow-lg:
-    0 10px 25px rgb(15 23 42 / 0.1);
+    0 16px 40px rgb(20 16 31 / 0.12);
+
+  --shadow-glow:
+    0 12px 32px rgb(126 20 255 / 0.25);
 
   /* Layout */
-  --content-max-width: 1200px;
+  --content-max-width: 1240px;
   --sidebar-width: 240px;
-  --header-height: 72px;
+  --header-height: 76px;
 
   /* Motion */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }

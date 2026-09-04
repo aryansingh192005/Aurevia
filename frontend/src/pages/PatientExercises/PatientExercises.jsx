@@ -1,7 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Dumbbell, Flame, PlayCircle, Target } from 'lucide-react';
 
 import api from '../../services/api';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import Card from '../../components/Card/Card';
+import StatusBadge from '../../components/StatusBadge/StatusBadge';
+import EmptyState from '../../components/EmptyState/EmptyState';
+import Spinner from '../../components/Spinner/Spinner';
+import Alert from '../../components/Alert/Alert';
+import Button from '../../components/Button/Button';
+
+import './PatientExercises.css';
+
+const STATUS_TONE = {
+  active: 'success',
+  paused: 'warning',
+  completed: 'neutral',
+};
 
 function PatientExercises() {
   const [assignments, setAssignments] = useState([]);
@@ -15,25 +31,18 @@ function PatientExercises() {
       try {
         const response = await api.get('/assignments');
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         setAssignments(response.data.assignments || []);
       } catch (requestError) {
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
-        const message =
+        setError(
           requestError.response?.data?.error ||
-          'Unable to load assigned exercises.';
-
-        setError(message);
+            'Unable to load assigned exercises.',
+        );
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -45,87 +54,72 @@ function PatientExercises() {
   }, []);
 
   if (isLoading) {
-    return (
-      <section>
-        <h1>Assigned Exercises</h1>
-        <p>Loading your exercises...</p>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section>
-        <h1>Assigned Exercises</h1>
-        <p role="alert">{error}</p>
-      </section>
-    );
+    return <Spinner label="Loading your exercises..." fullPage />;
   }
 
   return (
-    <section>
-      <h1>Assigned Exercises</h1>
+    <div>
+      <PageHeader
+        eyebrow="My Program"
+        title="Assigned Exercises"
+        description="Exercises assigned to you by your therapist."
+      />
 
-      <p>
-        Exercises assigned to you by your therapist.
-      </p>
+      {error && <Alert variant="error">{error}</Alert>}
 
-      {assignments.length === 0 ? (
-        <div>
-          <h2>No exercises assigned</h2>
-
-          <p>
-            Your therapist has not assigned any
-            rehabilitation exercises yet.
-          </p>
-        </div>
+      {assignments.length === 0 && !error ? (
+        <EmptyState
+          icon={<Dumbbell size={28} />}
+          title="No exercises assigned yet"
+          description="Your therapist has not assigned any rehabilitation exercises yet. Check back soon."
+        />
       ) : (
-        <div>
+        <div className="exercise-grid">
           {assignments.map((assignment) => (
-            <article key={assignment.id}>
-              <h2>
-                {assignment.exercise.name}
-              </h2>
+            <Card key={assignment.id} hoverable className="exercise-card">
+              <div className="exercise-card__header">
+                <h2>{assignment.exercise.name}</h2>
+                <StatusBadge status={STATUS_TONE[assignment.status] || 'neutral'}>
+                  {assignment.status}
+                </StatusBadge>
+              </div>
 
-              <p>
-                {assignment.exercise.description}
-              </p>
+              <p className="exercise-card__description">{assignment.exercise.description}</p>
 
-              <p>
-                <strong>Target area:</strong>{' '}
-                {assignment.exercise.target_area}
-              </p>
+              <div className="exercise-card__meta">
+                <span>
+                  <Target size={14} /> {assignment.exercise.target_area || 'General'}
+                </span>
+                <span>
+                  <Flame size={14} /> {assignment.exercise.difficulty || 'Any level'}
+                </span>
+              </div>
 
-              <p>
-                <strong>Difficulty:</strong>{' '}
-                {assignment.exercise.difficulty}
-              </p>
+              <div className="exercise-card__targets">
+                <div>
+                  <span className="exercise-card__target-value">
+                    {assignment.target_sets ?? '—'}
+                  </span>
+                  <span className="exercise-card__target-label">Sets</span>
+                </div>
+                <div>
+                  <span className="exercise-card__target-value">
+                    {assignment.target_reps ?? '—'}
+                  </span>
+                  <span className="exercise-card__target-label">Reps</span>
+                </div>
+              </div>
 
-              <p>
-                <strong>Sets:</strong>{' '}
-                {assignment.target_sets ?? 'Not specified'}
-              </p>
-
-              <p>
-                <strong>Repetitions:</strong>{' '}
-                {assignment.target_reps ?? 'Not specified'}
-              </p>
-
-              <p>
-                <strong>Status:</strong>{' '}
-                {assignment.status}
-              </p>
-
-              <Link
-                to={`/patient/exercises/${assignment.id}/start`}
-              >
-                Start Exercise
+              <Link to={`/patient/exercises/${assignment.id}/start`}>
+                <Button fullWidth icon={<PlayCircle size={16} />}>
+                  Start Exercise
+                </Button>
               </Link>
-            </article>
+            </Card>
           ))}
         </div>
       )}
-    </section>
+    </div>
   );
 }
 

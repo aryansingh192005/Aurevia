@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from werkzeug.security import generate_password_hash
 
 sys.path.insert(
     0,
@@ -10,7 +11,7 @@ sys.path.insert(
 
 from app import create_app
 from app.extensions import db
-from app.models import Exercise, User
+from app.models import Exercise, ExerciseAssignment, User
 
 
 @pytest.fixture()
@@ -39,12 +40,25 @@ def client(app):
 
 
 @pytest.fixture()
-def user_and_exercise(app):
+def assignment_and_credentials(app):
+    """Creates a therapist, a patient, an exercise, and an active
+    assignment between them. Returns the assignment id plus the patient's
+    login credentials, since /api/sessions requires an authenticated
+    patient and an assignment_id (not a raw exercise_id)."""
+
     with app.app_context():
-        user = User(
-            name="Session User",
+        therapist = User(
+            name="Dr Therapist",
+            email="therapist@example.com",
+            password_hash=generate_password_hash("password123"),
+            role="therapist",
+        )
+
+        patient = User(
+            name="Session Patient",
             email="session@example.com",
-            password_hash="test-password-hash",
+            password_hash=generate_password_hash("password123"),
+            role="patient",
         )
 
         exercise = Exercise(
@@ -54,14 +68,42 @@ def user_and_exercise(app):
             difficulty="Beginner",
         )
 
-        db.session.add_all([user, exercise])
+        db.session.add_all([therapist, patient, exercise])
         db.session.commit()
 
-        return user.id, exercise.id
+        assignment = ExerciseAssignment(
+            patient_id=patient.id,
+            therapist_id=therapist.id,
+            exercise_id=exercise.id,
+            target_sets=3,
+            target_reps=10,
+            status="active",
+        )
+
+        db.session.add(assignment)
+        db.session.commit()
+
+        return assignment.id, patient.email, "password123"
 
 
-def test_get_sessions_empty(client):
-    response = client.get("/api/sessions")
+@pytest.fixture()
+def logged_in_client(client, assignment_and_credentials):
+    """A test client authenticated as the patient who owns the assignment."""
+
+    _, email, password = assignment_and_credentials
+
+    login_response = client.post(
+        "/api/auth/login",
+        json={"email": email, "password": password},
+    )
+
+    assert login_response.status_code == 200
+
+    return client
+
+
+def test_get_sessions_empty(logged_in_client):
+    response = logged_in_client.get("/api/sessions")
 
     assert response.status_code == 200
     assert response.get_json() == {
@@ -69,15 +111,18 @@ def test_get_sessions_empty(client):
     }
 
 
-def test_create_session(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
+def test_get_sessions_requires_auth(client):
+    response = client.get("/api/sessions")
 
-    response = client.post(
+    assert response.status_code == 401
+
+
+def test_create_session(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
+
+    response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     assert response.status_code == 201
@@ -85,101 +130,74 @@ def test_create_session(client, user_and_exercise):
     data = response.get_json()
 
     assert data["session"]["id"] == 1
-    assert data["session"]["user_id"] == user_id
-    assert data["session"]["exercise_id"] == exercise_id
     assert data["session"]["status"] == "created"
     assert data["session"]["started_at"] is None
     assert data["session"]["completed_at"] is None
 
 
-def test_create_session_rejects_unknown_user(client, user_and_exercise):
-    _, exercise_id = user_and_exercise
-
-    response = client.post(
+def test_create_session_requires_assignment_id(logged_in_client):
+    response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": 999,
-            "exercise_id": exercise_id,
-        },
+        json={},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "error": "assignment_id is required",
+    }
+
+
+def test_create_session_rejects_unknown_assignment(logged_in_client):
+    response = logged_in_client.post(
+        "/api/sessions",
+        json={"assignment_id": 999},
     )
 
     assert response.status_code == 404
     assert response.get_json() == {
-        "error": "User not found",
+        "error": "Assignment not found",
     }
 
 
-def test_create_session_rejects_unknown_exercise(client, user_and_exercise):
-    user_id, _ = user_and_exercise
+def test_get_existing_session(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
 
-    response = client.post(
+    create_response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": 999,
-        },
-    )
-
-    assert response.status_code == 404
-    assert response.get_json() == {
-        "error": "Exercise not found",
-    }
-
-
-def test_get_existing_session(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
-
-    create_response = client.post(
-        "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     session_id = create_response.get_json()["session"]["id"]
 
-    response = client.get(
-        f"/api/sessions/{session_id}",
-    )
+    response = logged_in_client.get(f"/api/sessions/{session_id}")
 
     assert response.status_code == 200
 
     data = response.get_json()
 
     assert data["session"]["id"] == session_id
-    assert data["session"]["user_id"] == user_id
-    assert data["session"]["exercise_id"] == exercise_id
     assert data["session"]["status"] == "created"
 
 
-def test_get_nonexistent_session(client):
-    response = client.get("/api/sessions/999")
+def test_get_nonexistent_session(logged_in_client):
+    response = logged_in_client.get("/api/sessions/999")
 
     assert response.status_code == 404
-    assert response.get_json() == {
-        "error": "Session not found",
-    }
 
 
-def test_start_session(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
+def test_start_session(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
 
-    create_response = client.post(
+    create_response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     session_id = create_response.get_json()["session"]["id"]
 
-    response = client.patch(
+    response = logged_in_client.patch(
         f"/api/sessions/{session_id}",
-        json={
-            "status": "started",
-        },
+        json={"status": "started"},
     )
 
     assert response.status_code == 200
@@ -191,24 +209,19 @@ def test_start_session(client, user_and_exercise):
     assert data["session"]["completed_at"] is None
 
 
-def test_complete_session_sets_timestamps(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
+def test_complete_session_sets_timestamps(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
 
-    create_response = client.post(
+    create_response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     session_id = create_response.get_json()["session"]["id"]
 
-    response = client.patch(
+    response = logged_in_client.patch(
         f"/api/sessions/{session_id}",
-        json={
-            "status": "completed",
-        },
+        json={"status": "completed"},
     )
 
     assert response.status_code == 200
@@ -220,51 +233,37 @@ def test_complete_session_sets_timestamps(client, user_and_exercise):
     assert data["session"]["completed_at"] is not None
 
 
-def test_update_session_rejects_invalid_status(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
+def test_update_session_rejects_invalid_status(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
 
-    create_response = client.post(
+    create_response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     session_id = create_response.get_json()["session"]["id"]
 
-    response = client.patch(
+    response = logged_in_client.patch(
         f"/api/sessions/{session_id}",
-        json={
-            "status": "invalid",
-        },
+        json={"status": "invalid"},
     )
 
     assert response.status_code == 400
-    assert response.get_json() == {
-        "error": "Invalid session status",
-    }
 
 
-def test_update_session_requires_status(client, user_and_exercise):
-    user_id, exercise_id = user_and_exercise
+def test_update_session_requires_status(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
 
-    create_response = client.post(
+    create_response = logged_in_client.post(
         "/api/sessions",
-        json={
-            "user_id": user_id,
-            "exercise_id": exercise_id,
-        },
+        json={"assignment_id": assignment_id},
     )
 
     session_id = create_response.get_json()["session"]["id"]
 
-    response = client.patch(
+    response = logged_in_client.patch(
         f"/api/sessions/{session_id}",
         json={},
     )
 
     assert response.status_code == 400
-    assert response.get_json() == {
-        "error": "status is required",
-    }

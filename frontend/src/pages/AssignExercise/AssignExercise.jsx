@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ClipboardCheck, Dumbbell, Hash, User } from 'lucide-react';
 
 import api from '../../services/api';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import Card from '../../components/Card/Card';
+import FormField from '../../components/FormField/FormField';
+import Button from '../../components/Button/Button';
+import Alert from '../../components/Alert/Alert';
+import Spinner from '../../components/Spinner/Spinner';
+
+import './AssignExercise.css';
 
 function AssignExercise() {
   const navigate = useNavigate();
@@ -26,37 +35,23 @@ function AssignExercise() {
 
     async function loadData() {
       try {
-        const [patientsResponse, exercisesResponse] =
-          await Promise.all([
-            api.get('/patients'),
-            api.get('/exercises'),
-          ]);
+        const [patientsResponse, exercisesResponse] = await Promise.all([
+          api.get('/patients'),
+          api.get('/exercises'),
+        ]);
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
-        setPatients(
-          patientsResponse.data.patients || [],
-        );
-
-        setExercises(
-          exercisesResponse.data.exercises || [],
-        );
+        setPatients(patientsResponse.data.patients || []);
+        setExercises(exercisesResponse.data.exercises || []);
       } catch (requestError) {
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
-        const message =
-          requestError.response?.data?.error ||
-          'Unable to load assignment data.';
-
-        setError(message);
+        setError(
+          requestError.response?.data?.error || 'Unable to load assignment data.',
+        );
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -84,18 +79,14 @@ function AssignExercise() {
     setIsSubmitting(true);
 
     try {
-      const response = await api.post(
-        '/assignments',
-        {
-          patient_id: Number(formData.patient_id),
-          exercise_id: Number(formData.exercise_id),
-          target_sets: Number(formData.target_sets),
-          target_reps: Number(formData.target_reps),
-        },
-      );
+      const response = await api.post('/assignments', {
+        patient_id: Number(formData.patient_id),
+        exercise_id: Number(formData.exercise_id),
+        target_sets: Number(formData.target_sets),
+        target_reps: Number(formData.target_reps),
+      });
 
-      const assignment =
-        response.data.assignment;
+      const assignment = response.data.assignment;
 
       setSuccess(
         `${assignment.exercise.name} assigned successfully to ${assignment.patient.name}.`,
@@ -108,161 +99,121 @@ function AssignExercise() {
         target_reps: 10,
       });
     } catch (requestError) {
-      const message =
-        requestError.response?.data?.error ||
-        'Unable to assign exercise.';
-
-      setError(message);
+      setError(requestError.response?.data?.error || 'Unable to assign exercise.');
     } finally {
       setIsSubmitting(false);
     }
   }
 
   if (isLoading) {
-    return (
-      <section>
-        <h1>Assign Exercise</h1>
-        <p>Loading assignment options...</p>
-      </section>
-    );
-  }
-
-  if (error && patients.length === 0) {
-    return (
-      <section>
-        <h1>Assign Exercise</h1>
-        <p role="alert">{error}</p>
-      </section>
-    );
+    return <Spinner label="Loading assignment options..." fullPage />;
   }
 
   return (
-    <section>
-      <h1>Assign Exercise</h1>
+    <div>
+      <PageHeader
+        eyebrow="Care Plan"
+        title="Assign Exercise"
+        description="Prescribe a rehabilitation exercise to a patient."
+      />
 
-      <p>
-        Prescribe a rehabilitation exercise to a
-        patient.
-      </p>
+      {patients.length === 0 && error ? (
+        <Alert variant="error">{error}</Alert>
+      ) : (
+        <Card className="assign-form-card">
+          <form onSubmit={handleSubmit}>
+            <FormField label="Patient" htmlFor="patient_id">
+              <div className="select-with-icon">
+                <User size={17} />
+                <select
+                  id="patient_id"
+                  name="patient_id"
+                  value={formData.patient_id}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a patient</option>
+                  {patients.map((patient) => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.name} ({patient.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </FormField>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="patient_id">
-            Patient
-          </label>
+            <FormField label="Exercise" htmlFor="exercise_id">
+              <div className="select-with-icon">
+                <Dumbbell size={17} />
+                <select
+                  id="exercise_id"
+                  name="exercise_id"
+                  value={formData.exercise_id}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select an exercise</option>
+                  {exercises.map((exercise) => (
+                    <option key={exercise.id} value={exercise.id}>
+                      {exercise.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </FormField>
 
-          <select
-            id="patient_id"
-            name="patient_id"
-            value={formData.patient_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">
-              Select a patient
-            </option>
+            <div className="assign-form-row">
+              <FormField label="Target Sets" htmlFor="target_sets">
+                <div className="select-with-icon">
+                  <Hash size={17} />
+                  <input
+                    id="target_sets"
+                    name="target_sets"
+                    type="number"
+                    min="1"
+                    value={formData.target_sets}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </FormField>
 
-            {patients.map((patient) => (
-              <option
-                key={patient.id}
-                value={patient.id}
+              <FormField label="Target Repetitions" htmlFor="target_reps">
+                <div className="select-with-icon">
+                  <Hash size={17} />
+                  <input
+                    id="target_reps"
+                    name="target_reps"
+                    type="number"
+                    min="1"
+                    value={formData.target_reps}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </FormField>
+            </div>
+
+            {error && <Alert variant="error">{error}</Alert>}
+            {success && <Alert variant="success">{success}</Alert>}
+
+            <div className="assign-form-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate('/therapist/dashboard')}
               >
-                {patient.name} ({patient.email})
-              </option>
-            ))}
-          </select>
-        </div>
+                Back to Dashboard
+              </Button>
 
-        <div>
-          <label htmlFor="exercise_id">
-            Exercise
-          </label>
-
-          <select
-            id="exercise_id"
-            name="exercise_id"
-            value={formData.exercise_id}
-            onChange={handleChange}
-            required
-          >
-            <option value="">
-              Select an exercise
-            </option>
-
-            {exercises.map((exercise) => (
-              <option
-                key={exercise.id}
-                value={exercise.id}
-              >
-                {exercise.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="target_sets">
-            Target Sets
-          </label>
-
-          <input
-            id="target_sets"
-            name="target_sets"
-            type="number"
-            min="1"
-            value={formData.target_sets}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="target_reps">
-            Target Repetitions
-          </label>
-
-          <input
-            id="target_reps"
-            name="target_reps"
-            type="number"
-            min="1"
-            value={formData.target_reps}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        {error && (
-          <p role="alert">
-            {error}
-          </p>
-        )}
-
-        {success && (
-          <p role="status">
-            {success}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? 'Assigning...'
-            : 'Assign Exercise'}
-        </button>
-      </form>
-
-      <button
-        type="button"
-        onClick={() =>
-          navigate('/therapist/dashboard')
-        }
-      >
-        Back to Dashboard
-      </button>
-    </section>
+              <Button type="submit" loading={isSubmitting} icon={<ClipboardCheck size={16} />}>
+                Assign Exercise
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+    </div>
   );
 }
 

@@ -1,0 +1,81 @@
+.exercise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+.exercise-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.exercise-card__header h2 {
+  margin: 0;
+  color: var(--color-neutral-900);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.exercise-card__description {
+  margin: 0 0 var(--space-4);
+  color: var(--color-neutral-500);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.exercise-card__meta {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.exercise-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-neutral-500);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+}
+
+.exercise-card__targets {
+  display: flex;
+  gap: var(--space-6);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-md);
+}
+
+.exercise-card__targets div {
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-card__target-value {
+  color: var(--color-neutral-900);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.exercise-card__target-label {
+  color: var(--color-neutral-500);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}

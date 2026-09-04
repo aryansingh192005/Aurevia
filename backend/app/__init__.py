@@ -10,13 +10,14 @@ from app.routes.assignments import assignments_bp
 from app.routes.patients import patients_bp
 
 from app.routes.progress import progress_bp
+from app.routes.recordings import recordings_bp
 
 def create_app(config=None):
     app = Flask(__name__)
 
-    if config is None:
-        app.config.from_object(Config)
-    else:
+    app.config.from_object(Config)
+
+    if config is not None:
         app.config.from_mapping(config)
 
     db.init_app(app)
@@ -61,5 +62,10 @@ def create_app(config=None):
     progress_bp,
     url_prefix="/api",
 )
+
+    app.register_blueprint(
+        recordings_bp,
+        url_prefix="/api",
+    )
 
     return app

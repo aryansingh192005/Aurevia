@@ -1,10 +1,10 @@
 import './Card.css';
 
-function Card({ children, className = '' }) {
+function Card({ children, className = '', hoverable = false, as: Tag = 'section' }) {
   return (
-    <section className={`aurevia-card ${className}`}>
+    <Tag className={`aurevia-card ${hoverable ? 'aurevia-card--hoverable' : ''} ${className}`}>
       {children}
-    </section>
+    </Tag>
   );
 }
 

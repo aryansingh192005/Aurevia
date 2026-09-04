@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
+import Alert from '../../components/Alert/Alert';
+import FormField from '../../components/FormField/FormField';
+import Button from '../../components/Button/Button';
+
+import '../../styles/auth.css';
 
 function Login() {
   const navigate = useNavigate();
@@ -10,20 +16,11 @@ function Login() {
     login,
     loading,
     isAuthenticated,
-    user,
   } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      return;
-    }
-
-    navigate('/dashboard', { replace: true });
-  }, [isAuthenticated, user, navigate]);
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -39,82 +36,75 @@ function Login() {
       return;
     }
 
-    const result = await login(
-      email.trim(),
-      password,
-    );
+    const result = await login(email.trim(), password);
 
     if (!result.success) {
       setError(result.error);
+      return;
     }
+
+    navigate('/dashboard', { replace: true });
   }
 
   return (
-    <section className="auth-page">
-      <div className="auth-card">
-        <h1>Welcome back</h1>
-
+    <div className="auth-page">
+      <div className="auth-showcase">
+        <div className="auth-showcase__glow" aria-hidden="true" />
+        <span className="auth-showcase__badge">Aurevia</span>
+        <h2>Every rep, understood.</h2>
         <p>
-          Sign in to continue your rehabilitation journey.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">
-              Email
-            </label>
-
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">
-              Password
-            </label>
-
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
-          </div>
-
-          {error && (
-            <p className="form-error">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Don't have an account?{' '}
-          <Link to="/register">
-            Create one
-          </Link>
+          Sign in to pick up your rehabilitation plan right where you left
+          off — AI form feedback and all.
         </p>
       </div>
-    </section>
+
+      <div className="auth-form-panel">
+        <div className="auth-card animate-in">
+          <h1>Welcome back</h1>
+          <p className="auth-subtitle">Sign in to continue your rehabilitation journey.</p>
+
+          {error && <Alert variant="error">{error}</Alert>}
+
+          <form onSubmit={handleSubmit}>
+            <FormField label="Email" htmlFor="email">
+              <div className="input-with-icon">
+                <Mail size={17} />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </div>
+            </FormField>
+
+            <FormField label="Password" htmlFor="password">
+              <div className="input-with-icon">
+                <Lock size={17} />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                />
+              </div>
+            </FormField>
+
+            <Button type="submit" fullWidth loading={loading} icon={<ArrowRight size={16} />}>
+              Sign In
+            </Button>
+          </form>
+
+          <p className="auth-footer">
+            Don't have an account? <Link to="/register">Create one</Link>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
