@@ -122,6 +122,7 @@ pnpm-debug.log*
 # Trained model files
 *.h5
 *.keras
+!ai/models/lstm/exercise_quality_lstm.keras
 *.onnx
 *.pt
 *.pth

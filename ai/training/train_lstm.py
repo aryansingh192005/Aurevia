@@ -19,6 +19,19 @@ from typing import Tuple
 
 import numpy as np
 
+SEQUENCE_LENGTH = 30
+FEATURE_COUNT = 8
+FEATURE_NAMES = (
+    "left_elbow_angle",
+    "right_elbow_angle",
+    "left_shoulder_angle",
+    "right_shoulder_angle",
+    "left_hip_angle",
+    "right_hip_angle",
+    "left_knee_angle",
+    "right_knee_angle",
+)
+
 
 def stratified_split(
     X: np.ndarray,
@@ -150,8 +163,17 @@ def train(
 
     if X.ndim != 3:
         raise ValueError(f"Expected X to have shape (N, sequence_length, feature_count), got {X.shape}")
+    if X.shape[1:] != (SEQUENCE_LENGTH, FEATURE_COUNT):
+        raise ValueError(
+            f"Expected each sequence to have shape ({SEQUENCE_LENGTH}, {FEATURE_COUNT}), "
+            f"got {X.shape[1:]}"
+        )
     if len(X) != len(y):
         raise ValueError(f"X and y length mismatch: {len(X)} vs {len(y)}")
+    if not np.isin(y, [0, 1]).all():
+        raise ValueError("y must contain binary labels: 1=correct and 0=incorrect")
+    if "feature_names" in dataset.files and tuple(dataset["feature_names"].tolist()) != FEATURE_NAMES:
+        raise ValueError("dataset feature_names do not match Aurevia's 8-feature order")
     if len(X) < 20:
         print(
             f"Warning: only {len(X)} labeled examples found. The model will train, "

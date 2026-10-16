@@ -29,27 +29,55 @@ const PoseCamera = forwardRef(function PoseCamera(
   const repCounterRef = useRef(null);
   const rafRef = useRef(null);
   const streamRef = useRef(null);
+  const modelAvailableRef = useRef(false);
+  const predictionTrackerRef = useRef({ results: [], pending: [] });
+  const latestUpdateRef = useRef(null);
 
   const [status, setStatus] = useState('loading'); // loading | ready | denied | error
   const [errorMessage, setErrorMessage] = useState('');
   const [liveFeedback, setLiveFeedback] = useState('Loading AI model...');
+  const [modelAvailable, setModelAvailable] = useState(null);
+  const [aiPredictions, setAiPredictions] = useState([]);
 
   // Every completed rep is logged to the backend as a labeled training
   // example for the future LSTM model. This is fire-and-forget: a failed
   // log should never interrupt the patient's live session.
   function logRep({ repIndex, sequence, label, confidence }) {
-    if (!logRecordings || !sessionId) return;
+    if (logRecordings && sessionId) {
+      api
+        .post(`/sessions/${sessionId}/recordings`, {
+          rep_index: repIndex,
+          sequence,
+          heuristic_label: label,
+          heuristic_confidence: confidence,
+        })
+        .catch(() => {
+          // Training-data logging must never interrupt a live session.
+        });
+    }
 
-    api
-      .post(`/sessions/${sessionId}/recordings`, {
-        rep_index: repIndex,
-        sequence,
-        heuristic_label: label,
-        heuristic_confidence: confidence,
+    if (!modelAvailableRef.current || !sessionId) return;
+
+    const predictionRequest = api
+      .post(`/sessions/${sessionId}/predict`, { sequence })
+      .then(({ data }) => {
+        predictionTrackerRef.current.results.push(data.prediction);
+        const predictions = predictionTrackerRef.current.results;
+        setAiPredictions([...predictions]);
+        if (latestUpdateRef.current) {
+          onUpdate?.({
+            ...latestUpdateRef.current,
+            aiPredictions: predictions.length,
+            aiCorrectReps: predictions.filter((item) => item.label === 'correct').length,
+            aiIncorrectReps: predictions.filter((item) => item.label === 'incorrect').length,
+          });
+        }
       })
       .catch(() => {
-        // Non-critical: training-data logging should never break the session.
+        // Continue using the movement-range heuristic if inference fails.
       });
+
+    predictionTrackerRef.current.pending.push(predictionRequest);
   }
 
   // Load the pose landmarker model once.
@@ -75,6 +103,14 @@ const PoseCamera = forwardRef(function PoseCamera(
         }
 
         landmarkerRef.current = landmarker;
+        try {
+          const response = await api.get('/ai/status');
+          modelAvailableRef.current = Boolean(response.data.available);
+          setModelAvailable(modelAvailableRef.current);
+        } catch {
+          modelAvailableRef.current = false;
+          setModelAvailable(false);
+        }
         repCounterRef.current = new RepCounter(targetArea, { onRepComplete: logRep });
         setStatus('ready');
       } catch (setupError) {
@@ -153,9 +189,16 @@ const PoseCamera = forwardRef(function PoseCamera(
 
         const angles = extractJointAngles(landmarks);
         const update = repCounterRef.current.update(angles);
+        latestUpdateRef.current = update;
 
         setLiveFeedback(update.feedback);
-        onUpdate?.(update);
+        const predictions = predictionTrackerRef.current.results;
+        onUpdate?.({
+          ...update,
+          aiPredictions: predictions.length,
+          aiCorrectReps: predictions.filter((item) => item.label === 'correct').length,
+          aiIncorrectReps: predictions.filter((item) => item.label === 'incorrect').length,
+        });
       } else {
         setLiveFeedback('Step back so your full body is visible.');
       }
@@ -200,7 +243,27 @@ const PoseCamera = forwardRef(function PoseCamera(
   }
 
   useImperativeHandle(ref, () => ({
-    getSummary: () => repCounterRef.current?.summary() || null,
+    getSummary: async () => {
+      await Promise.allSettled(predictionTrackerRef.current.pending);
+      const heuristic = repCounterRef.current?.summary();
+      if (!heuristic) return null;
+
+      const predictions = predictionTrackerRef.current.results;
+      if (predictions.length === heuristic.repetitions && predictions.length > 0) {
+        const correct = predictions.filter((item) => item.label === 'correct').length;
+        const accuracy = Math.round((correct / predictions.length) * 100);
+        return {
+          repetitions: predictions.length,
+          correct_repetitions: correct,
+          incorrect_repetitions: predictions.length - correct,
+          accuracy,
+          analysis_source: 'lstm',
+          feedback: `LSTM analysis: ${correct} of ${predictions.length} repetitions classified as correct.`,
+        };
+      }
+
+      return { ...heuristic, analysis_source: 'heuristic' };
+    },
   }));
 
   return (
@@ -239,7 +302,19 @@ const PoseCamera = forwardRef(function PoseCamera(
       </div>
 
       {status === 'ready' && active && (
-        <div className="pose-camera__feedback">{liveFeedback}</div>
+        <>
+          <div className="pose-camera__feedback">{liveFeedback}</div>
+          {modelAvailable === false && (
+            <div className="pose-camera__feedback">
+              Trained LSTM unavailable; using movement-range feedback.
+            </div>
+          )}
+          {modelAvailable && aiPredictions.length > 0 && (
+            <div className="pose-camera__feedback">
+              LSTM predictions received: {aiPredictions.length}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

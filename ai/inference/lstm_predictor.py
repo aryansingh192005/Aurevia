@@ -19,6 +19,8 @@ import numpy as np
 DEFAULT_MODEL_PATH = (
     Path(__file__).resolve().parents[1] / "models" / "lstm" / "exercise_quality_lstm.keras"
 )
+SEQUENCE_LENGTH = 30
+FEATURE_COUNT = 8
 
 
 class LSTMPredictor:
@@ -42,7 +44,10 @@ class LSTMPredictor:
         try:
             from tensorflow import keras
 
-            self._model = keras.models.load_model(self.model_path)
+            model = keras.models.load_model(self.model_path)
+            if tuple(model.input_shape) != (None, SEQUENCE_LENGTH, FEATURE_COUNT):
+                return False
+            self._model = model
             return True
         except Exception:
             # A corrupt/incompatible model file should never crash the
@@ -67,8 +72,12 @@ class LSTMPredictor:
 
         array = np.asarray(sequence, dtype=np.float32)
 
-        if array.ndim != 2:
-            raise ValueError("sequence must be 2-dimensional (frames, features)")
+        if array.shape != (SEQUENCE_LENGTH, FEATURE_COUNT):
+            raise ValueError(
+                f"sequence must have shape ({SEQUENCE_LENGTH}, {FEATURE_COUNT})"
+            )
+        if not np.all(np.isfinite(array)):
+            raise ValueError("sequence must contain only finite values")
 
         batch = array[np.newaxis, ...]
         probability = float(self._model.predict(batch, verbose=0)[0][0])

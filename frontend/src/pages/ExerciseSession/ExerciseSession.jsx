@@ -120,15 +120,15 @@ function ExerciseSession() {
   async function completeSession() {
     if (!session) return;
 
+    setIsCompleting(true);
+    setError('');
+
     // Capture the AI-tracked summary the moment the patient finishes,
-    // before the camera unmounts.
-    const summary = poseCameraRef.current?.getSummary();
+    // including any pending per-repetition LSTM predictions.
+    const summary = await poseCameraRef.current?.getSummary();
     if (summary) {
       setFinalResult(summary);
     }
-
-    setIsCompleting(true);
-    setError('');
 
     try {
       const response = await api.patch(`/sessions/${session.id}`, {
@@ -252,7 +252,7 @@ function ExerciseSession() {
               <PoseCamera
                 ref={poseCameraRef}
                 targetArea={exercise.target_area}
-                active={isLive}
+                active={isLive && !isCompleting}
                 onUpdate={setLiveStats}
                 sessionId={session.id}
               />
@@ -331,12 +331,18 @@ function ExerciseSession() {
                   </div>
                   <div>
                     <span className="live-stats__value">{liveStats.correctReps ?? 0}</span>
-                    <span className="live-stats__label">Correct</span>
+                    <span className="live-stats__label">Range correct</span>
                   </div>
                   <div>
                     <span className="live-stats__value">{liveStats.incorrectReps ?? 0}</span>
-                    <span className="live-stats__label">Off-form</span>
+                    <span className="live-stats__label">Range incomplete</span>
                   </div>
+                  {liveStats.aiPredictions > 0 && (
+                    <div>
+                      <span className="live-stats__value">{liveStats.aiCorrectReps}/{liveStats.aiPredictions}</span>
+                      <span className="live-stats__label">LSTM correct</span>
+                    </div>
+                  )}
                 </div>
               )}
 
