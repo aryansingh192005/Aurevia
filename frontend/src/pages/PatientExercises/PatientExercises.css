@@ -51,6 +51,9 @@
   font-weight: var(--font-weight-semibold);
   text-transform: capitalize;
 }
+.exercise-card__cue { padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-4); border-left: 3px solid var(--color-primary-400); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--color-primary-50); }
+.exercise-card__cue strong { color: var(--color-primary-800); font-size: var(--font-size-xs); }
+.exercise-card__cue p { margin: 4px 0 0; color: var(--color-neutral-700); font-size: var(--font-size-sm); line-height: 1.5; white-space: pre-wrap; }
 
 .exercise-card__targets {
   display: flex;

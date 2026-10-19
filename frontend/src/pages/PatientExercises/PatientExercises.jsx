@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Dumbbell, Flame, PlayCircle, Target } from 'lucide-react';
+import { Dumbbell, Flame, PlayCircle, Target, Timer } from 'lucide-react';
 
 import api from '../../services/api';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -102,7 +102,17 @@ function PatientExercises() {
                 <span>
                   <Flame size={14} /> {assignment.exercise.difficulty || 'Any level'}
                 </span>
+                <span>
+                  <Timer size={14} /> {assignment.rest_seconds ?? 30}s rest
+                </span>
               </div>
+
+              {assignment.instructions && (
+                <div className="exercise-card__cue">
+                  <strong>Therapist’s cue</strong>
+                  <p>{assignment.instructions}</p>
+                </div>
+              )}
 
               <div className="exercise-card__targets">
                 <div>
