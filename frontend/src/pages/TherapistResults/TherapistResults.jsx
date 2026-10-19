@@ -129,6 +129,10 @@ function TherapistResults() {
                     ))}
                 </div>
 
+                {accuracy == null && !patientCheckIn && (
+                  <p className="result-card__empty">No movement-analysis data was captured for this session.</p>
+                )}
+
                 {patientCheckIn && <div className="result-patient-checkin"><strong>Patient check-in · self-reported</strong><div><span>Discomfort <b>{patientCheckIn.discomfort_rating}/10</b></span><span>Effort <b>{patientCheckIn.effort_rating}/10</b></span></div>{patientCheckIn.note && <p>{patientCheckIn.note}</p>}</div>}
 
                 {result.result_data?.feedback && (

@@ -228,13 +228,7 @@ function ExerciseSession() {
     setError('');
 
     const resultData = {
-      ...(finalResult || {
-      repetitions: 0,
-      correct_repetitions: 0,
-      incorrect_repetitions: 0,
-      accuracy: 0,
-      feedback: 'No AI tracking data was captured for this session.',
-      }),
+      ...(finalResult || {}),
       ...(includePatientCheckIn ? {
         patient_check_in: {
           discomfort_rating: Number(discomfortRating),
@@ -520,12 +514,16 @@ function ExerciseSession() {
                     loading={isSubmittingResult}
                     icon={<Award size={16} />}
                   >
-                    Submit AI Result
+                    {finalResult ? 'Save session result' : 'Save session details'}
                   </Button>
                 </>
               ) : (
                 <>
-                  <Alert variant="success">Result saved successfully.</Alert>
+                  <Alert variant="success">
+                    {finalResult
+                      ? 'Session result saved successfully.'
+                      : 'Session details saved. No movement analysis was recorded.'}
+                  </Alert>
                   <Link to="/sessions">
                     <Button variant="secondary">View Session History</Button>
                   </Link>

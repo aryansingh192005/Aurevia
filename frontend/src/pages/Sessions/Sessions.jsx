@@ -121,7 +121,12 @@ function Sessions() {
             />
           ) : (
             <div className="session-list">
-              {filteredSessions.map((session) => (
+              {filteredSessions.map((session) => {
+                const resultData = session.result?.result_data || {};
+                const hasMovementAnalysis = ['repetitions', 'correct_repetitions', 'incorrect_repetitions', 'accuracy']
+                  .some((key) => typeof resultData[key] === 'number');
+
+                return (
             <Card key={session.id} className="session-row">
               <div className="session-row__main">
                 <h2>{session.exercise.name}</h2>
@@ -154,27 +159,33 @@ function Sessions() {
                 <div className="session-result" aria-label="Session result summary">
                   {session.result ? (
                     <>
-                      <strong>Session summary</strong>
-                      <div className="session-result__metrics">
-                        {typeof session.result.result_data?.repetitions === 'number' && (
-                          <span><b>{session.result.result_data.repetitions}</b> reps</span>
-                        )}
-                        {typeof session.result.result_data?.correct_repetitions === 'number' && (
-                          <span><b>{session.result.result_data.correct_repetitions}</b> correct reps</span>
-                        )}
-                        {typeof session.result.result_data?.accuracy === 'number' && (
-                          <span><b>{session.result.result_data.accuracy}%</b> AI-labeled correct reps</span>
-                        )}
-                      </div>
-                      {typeof session.result.result_data?.accuracy === 'number' && (
-                        <span className="session-result__source">Movement analysis · {session.result.result_data.analysis_source === 'lstm' ? 'LSTM model' : session.result.result_data.analysis_source === 'heuristic' ? 'pose-based estimate' : 'source not recorded'} · informational estimate</span>
+                      {hasMovementAnalysis ? (
+                        <>
+                          <strong>Movement analysis summary</strong>
+                          <div className="session-result__metrics">
+                            {typeof resultData.repetitions === 'number' && (
+                              <span><b>{resultData.repetitions}</b> reps</span>
+                            )}
+                            {typeof resultData.correct_repetitions === 'number' && (
+                              <span><b>{resultData.correct_repetitions}</b> correct reps</span>
+                            )}
+                            {typeof resultData.accuracy === 'number' && (
+                              <span><b>{resultData.accuracy}%</b> AI-labeled correct reps</span>
+                            )}
+                          </div>
+                          {typeof resultData.accuracy === 'number' && (
+                            <span className="session-result__source">Movement analysis · {resultData.analysis_source === 'lstm' ? 'LSTM model' : resultData.analysis_source === 'heuristic' ? 'pose-based estimate' : 'source not recorded'} · informational estimate</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="session-result__empty">No movement analysis was recorded for this session.</span>
                       )}
-                      {session.result.result_data?.patient_check_in && (
+                      {resultData.patient_check_in && (
                         <div className="session-result__checkin">
                           <strong>Your check-in · self-reported</strong>
-                          <span>Discomfort {session.result.result_data.patient_check_in.discomfort_rating}/10 · Effort {session.result.result_data.patient_check_in.effort_rating}/10</span>
-                          {session.result.result_data.patient_check_in.note && (
-                            <p>{session.result.result_data.patient_check_in.note}</p>
+                          <span>Discomfort {resultData.patient_check_in.discomfort_rating}/10 · Effort {resultData.patient_check_in.effort_rating}/10</span>
+                          {resultData.patient_check_in.note && (
+                            <p>{resultData.patient_check_in.note}</p>
                           )}
                         </div>
                       )}
@@ -194,7 +205,7 @@ function Sessions() {
                 </section>
               )}
             </Card>
-              ))}
+              );})}
             </div>
           )}
         </>
