@@ -7,11 +7,8 @@ import api from '../../services/api';
 
 import './PoseCamera.css';
 
-const WASM_BASE =
-  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
-
-const MODEL_URL =
-  'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const WASM_BASE = '/vendor/mediapipe/wasm';
+const MODEL_URL = '/models/pose_landmarker_lite.task';
 
 /**
  * Runs live, in-browser AI pose estimation over the user's webcam feed
@@ -31,6 +28,7 @@ const PoseCamera = forwardRef(function PoseCamera(
   const streamRef = useRef(null);
   const modelAvailableRef = useRef(false);
   const predictionTrackerRef = useRef({ results: [], pending: [] });
+  const recordingRequestsRef = useRef([]);
   const latestUpdateRef = useRef(null);
 
   const [status, setStatus] = useState('loading'); // loading | ready | denied | error
@@ -39,12 +37,11 @@ const PoseCamera = forwardRef(function PoseCamera(
   const [modelAvailable, setModelAvailable] = useState(null);
   const [aiPredictions, setAiPredictions] = useState([]);
 
-  // Every completed rep is logged to the backend as a labeled training
-  // example for the future LSTM model. This is fire-and-forget: a failed
-  // log should never interrupt the patient's live session.
+  // Saving a training recording is opt-in. Live LSTM inference remains
+  // available regardless of that choice.
   function logRep({ repIndex, sequence, label, confidence }) {
     if (logRecordings && sessionId) {
-      api
+      const recordingRequest = api
         .post(`/sessions/${sessionId}/recordings`, {
           rep_index: repIndex,
           sequence,
@@ -54,6 +51,7 @@ const PoseCamera = forwardRef(function PoseCamera(
         .catch(() => {
           // Training-data logging must never interrupt a live session.
         });
+      recordingRequestsRef.current.push(recordingRequest);
     }
 
     if (!modelAvailableRef.current || !sessionId) return;
@@ -88,14 +86,20 @@ const PoseCamera = forwardRef(function PoseCamera(
       try {
         const vision = await FilesetResolver.forVisionTasks(WASM_BASE);
 
-        const landmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: MODEL_URL,
-            delegate: 'GPU',
-          },
+        const options = {
+          baseOptions: { modelAssetPath: MODEL_URL },
           runningMode: 'VIDEO',
           numPoses: 1,
-        });
+        };
+        let landmarker;
+        try {
+          landmarker = await PoseLandmarker.createFromOptions(vision, {
+            ...options,
+            baseOptions: { ...options.baseOptions, delegate: 'GPU' },
+          });
+        } catch {
+          landmarker = await PoseLandmarker.createFromOptions(vision, options);
+        }
 
         if (cancelled) {
           landmarker.close();
@@ -244,7 +248,10 @@ const PoseCamera = forwardRef(function PoseCamera(
 
   useImperativeHandle(ref, () => ({
     getSummary: async () => {
-      await Promise.allSettled(predictionTrackerRef.current.pending);
+      await Promise.allSettled([
+        ...predictionTrackerRef.current.pending,
+        ...recordingRequestsRef.current,
+      ]);
       const heuristic = repCounterRef.current?.summary();
       if (!heuristic) return null;
 
@@ -283,6 +290,9 @@ const PoseCamera = forwardRef(function PoseCamera(
           <div className="pose-camera__overlay">
             <Camera size={28} />
             <p>Camera access was denied. Allow camera permissions to enable live tracking.</p>
+            <button type="button" onClick={() => setStatus('ready')}>
+              Try camera again
+            </button>
           </div>
         )}
 

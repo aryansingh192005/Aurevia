@@ -21,6 +21,21 @@ def create_app(config=None):
     if config is not None:
         app.config.from_mapping(config)
 
+    if app.config.get("FLASK_ENV") == "production":
+        secret_key = app.config.get("SECRET_KEY")
+        if not isinstance(secret_key, str) or len(secret_key) < 32:
+            raise RuntimeError(
+                "AUREVIA_SECRET_KEY must contain at least 32 characters in production."
+            )
+
+        therapist_code = app.config.get("THERAPIST_REGISTRATION_CODE")
+        if therapist_code and (
+            not isinstance(therapist_code, str) or len(therapist_code) < 24
+        ):
+            raise RuntimeError(
+                "AUREVIA_THERAPIST_REGISTRATION_CODE must contain at least 24 characters when set."
+            )
+
     db.init_app(app)
     migrate.init_app(app, db)
 

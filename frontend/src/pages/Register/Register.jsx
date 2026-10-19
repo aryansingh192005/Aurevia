@@ -19,6 +19,7 @@ function Register() {
     email: '',
     password: '',
     role: 'patient',
+    therapistCode: '',
   });
 
   const [error, setError] = useState('');
@@ -56,6 +57,7 @@ function Register() {
       form.email.trim(),
       form.password,
       form.role,
+      form.therapistCode,
     );
 
     if (!result.success) {
@@ -81,7 +83,7 @@ function Register() {
       <div className="auth-form-panel">
         <div className="auth-card auth-card--wide animate-in">
           <h1>Create your Aurevia account</h1>
-          <p className="auth-subtitle">Choose your role and get started.</p>
+          <p className="auth-subtitle">Create a patient account or use your therapist invitation code.</p>
 
           {error && <Alert variant="error">{error}</Alert>}
 
@@ -154,6 +156,27 @@ function Register() {
                 />
               </div>
             </FormField>
+
+            {form.role === 'therapist' && (
+              <FormField
+                label="Therapist invitation code"
+                htmlFor="therapist-code"
+                hint="Ask your Aurevia administrator for an invitation code."
+              >
+                <div className="input-with-icon">
+                  <Lock size={17} />
+                  <input
+                    id="therapist-code"
+                    name="therapistCode"
+                    type="password"
+                    value={form.therapistCode}
+                    onChange={handleChange}
+                    autoComplete="one-time-code"
+                    required
+                  />
+                </div>
+              </FormField>
+            )}
 
             <Button type="submit" fullWidth loading={loading} icon={<ArrowRight size={16} />}>
               Create Account

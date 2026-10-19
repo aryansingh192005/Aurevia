@@ -11,7 +11,7 @@ sys.path.insert(
 
 from app import create_app
 from app.extensions import db
-from app.models import Exercise, ExerciseAssignment, User
+from app.models import Exercise, ExerciseAssignment, RehabilitationSession, User
 
 
 @pytest.fixture()
@@ -219,6 +219,12 @@ def test_complete_session_sets_timestamps(logged_in_client, assignment_and_crede
 
     session_id = create_response.get_json()["session"]["id"]
 
+    start_response = logged_in_client.patch(
+        f"/api/sessions/{session_id}",
+        json={"status": "started"},
+    )
+    assert start_response.status_code == 200
+
     response = logged_in_client.patch(
         f"/api/sessions/{session_id}",
         json={"status": "completed"},
@@ -231,6 +237,63 @@ def test_complete_session_sets_timestamps(logged_in_client, assignment_and_crede
     assert data["session"]["status"] == "completed"
     assert data["session"]["started_at"] is not None
     assert data["session"]["completed_at"] is not None
+
+
+def test_session_cannot_skip_the_started_state(logged_in_client, assignment_and_credentials):
+    assignment_id, _, _ = assignment_and_credentials
+    create_response = logged_in_client.post(
+        "/api/sessions",
+        json={"assignment_id": assignment_id},
+    )
+    session_id = create_response.get_json()["session"]["id"]
+
+    response = logged_in_client.patch(
+        f"/api/sessions/{session_id}",
+        json={"status": "completed"},
+    )
+
+    assert response.status_code == 409
+
+
+def test_therapist_cannot_read_unassigned_patient_sessions(client, app, assignment_and_credentials):
+    with app.app_context():
+        assignment_id, patient_email, _ = assignment_and_credentials
+        patient = User.query.filter_by(email=patient_email).one()
+        exercise = Exercise.query.one()
+        other_therapist = User(
+            name="Other Therapist",
+            email="other-therapist@example.com",
+            password_hash=generate_password_hash("password123"),
+            role="therapist",
+        )
+        db.session.add(other_therapist)
+        db.session.flush()
+        db.session.add(
+            ExerciseAssignment(
+                patient_id=patient.id,
+                therapist_id=other_therapist.id,
+                exercise_id=exercise.id,
+                status="active",
+            )
+        )
+        session = RehabilitationSession(
+            user_id=patient.id,
+            exercise_id=exercise.id,
+            assignment_id=assignment_id,
+            status="started",
+        )
+        db.session.add(session)
+        db.session.commit()
+        session_id = session.id
+
+    login_response = client.post(
+        "/api/auth/login",
+        json={"email": "other-therapist@example.com", "password": "password123"},
+    )
+    assert login_response.status_code == 200
+
+    assert client.get("/api/sessions").get_json()["sessions"] == []
+    assert client.get(f"/api/sessions/{session_id}").status_code == 403
 
 
 def test_update_session_rejects_invalid_status(logged_in_client, assignment_and_credentials):

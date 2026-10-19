@@ -57,6 +57,17 @@ def test_register_user(client):
     assert "created_at" in data["user"]
 
 
+def test_production_requires_a_strong_session_secret():
+    with pytest.raises(RuntimeError, match="AUREVIA_SECRET_KEY"):
+        create_app(
+            {
+                "FLASK_ENV": "production",
+                "SECRET_KEY": "too-short",
+                "THERAPIST_REGISTRATION_CODE": None,
+            }
+        )
+
+
 def test_register_requires_name_email_and_password(client):
     response = client.post(
         "/api/auth/register",
@@ -84,8 +95,43 @@ def test_register_rejects_short_password(client):
 
     assert response.status_code == 400
     assert response.get_json() == {
-        "error": "password must be at least 8 characters",
+        "error": "password must be between 8 and 128 characters",
     }
+
+
+def test_public_registration_cannot_create_a_therapist(client):
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "name": "Unverified Therapist",
+            "email": "therapist@example.com",
+            "password": "TestPassword123!",
+            "role": "therapist",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.get_json() == {
+        "error": "therapist registration requires a valid invitation code",
+    }
+
+
+def test_therapist_registration_requires_configured_invitation(client, app):
+    app.config["THERAPIST_REGISTRATION_CODE"] = "one-time-test-code"
+
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "name": "Verified Therapist",
+            "email": "therapist@example.com",
+            "password": "TestPassword123!",
+            "role": "therapist",
+            "therapist_code": "one-time-test-code",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.get_json()["user"]["role"] == "therapist"
 
 
 def test_register_rejects_duplicate_email(client):

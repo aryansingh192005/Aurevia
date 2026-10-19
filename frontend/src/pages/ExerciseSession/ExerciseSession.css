@@ -166,6 +166,25 @@
   line-height: 1.6;
 }
 
+.session-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  color: var(--color-neutral-700);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.session-consent input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-primary-600);
+}
+
 .session-panel__note {
   padding: var(--space-3) var(--space-4);
   background: var(--color-warning-50);

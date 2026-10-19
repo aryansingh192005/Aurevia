@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
+from sqlalchemy import and_
 
 from app.extensions import db
 from app.models import (
@@ -23,7 +24,6 @@ sessions_bp = Blueprint(
 VALID_STATUSES = {
     "created",
     "started",
-    "in_progress",
     "completed",
 }
 
@@ -33,6 +33,7 @@ def session_to_dict(session):
         "id": session.id,
         "user_id": session.user_id,
         "exercise_id": session.exercise_id,
+        "assignment_id": session.assignment_id,
         "exercise": {
             "id": session.exercise.id,
             "name": session.exercise.name,
@@ -102,11 +103,13 @@ def get_sessions(user):
 
     elif user.role == "therapist":
         query = query.join(
-            User,
-            RehabilitationSession.user_id == User.id,
-        ).filter(
-            User.role == "patient"
+            ExerciseAssignment,
+            and_(
+                ExerciseAssignment.id == RehabilitationSession.assignment_id,
+                ExerciseAssignment.therapist_id == user.id,
+            ),
         )
+        query = query.distinct()
 
     else:
         return jsonify(
@@ -155,7 +158,10 @@ def get_session(user, session_id):
             ), 403
 
     elif user.role == "therapist":
-        if session.user.role != "patient":
+        if (
+            session.assignment is None
+            or session.assignment.therapist_id != user.id
+        ):
             return jsonify(
                 {
                     "error": "forbidden",
@@ -220,6 +226,7 @@ def create_session(user):
     session = RehabilitationSession(
         user_id=user.id,
         exercise_id=assignment.exercise_id,
+        assignment_id=assignment.id,
         status="created",
     )
 
@@ -281,12 +288,22 @@ def update_session(user, session_id):
             }
         ), 400
 
-    if status not in VALID_STATUSES:
+    if not isinstance(status, str) or status not in VALID_STATUSES:
         return jsonify(
             {
                 "error": "Invalid session status",
             }
         ), 400
+
+    if status == session.status:
+        return jsonify({"session": session_to_dict(session)}), 200
+
+    allowed_transition = (session.status, status) == ("created", "started") or (
+        session.status,
+        status,
+    ) == ("started", "completed")
+    if not allowed_transition:
+        return jsonify({"error": "Invalid session status transition"}), 409
 
     now = datetime.now(timezone.utc)
 
@@ -340,6 +357,9 @@ def create_session_result(user, session_id):
                 "error": "Session must be completed before adding results",
             }
         ), 400
+
+    if SessionResult.query.filter_by(session_id=session.id).first() is not None:
+        return jsonify({"error": "A result has already been submitted for this session"}), 409
 
     data = request.get_json(silent=True) or {}
 
@@ -416,9 +436,17 @@ def get_session_results(user):
             User,
             RehabilitationSession.user_id == User.id,
         )
+        .join(
+            ExerciseAssignment,
+            and_(
+                ExerciseAssignment.id == RehabilitationSession.assignment_id,
+                ExerciseAssignment.therapist_id == user.id,
+            ),
+        )
         .filter(
             User.role == "patient"
         )
+        .distinct()
         .order_by(SessionResult.id.desc())
         .all()
     )

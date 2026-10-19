@@ -1,9 +1,16 @@
+import math
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
+from sqlalchemy import and_
 
 from app.extensions import db
-from app.models import Exercise, MovementRecording, RehabilitationSession
+from app.models import (
+    Exercise,
+    ExerciseAssignment,
+    MovementRecording,
+    RehabilitationSession,
+)
 from app.services.auth import require_auth, require_role
 
 
@@ -14,6 +21,7 @@ recordings_bp = Blueprint(
 
 
 VALID_LABELS = {"correct", "incorrect"}
+SEQUENCE_LENGTH = 30
 
 
 def recording_to_dict(recording, include_sequence=True):
@@ -60,8 +68,8 @@ def create_recording(user, session_id):
     heuristic_label = payload.get("heuristic_label")
     rep_index = payload.get("rep_index")
 
-    if not isinstance(sequence, list) or len(sequence) == 0:
-        return jsonify({"error": "sequence is required"}), 400
+    if not isinstance(sequence, list) or len(sequence) != SEQUENCE_LENGTH:
+        return jsonify({"error": f"sequence must contain exactly {SEQUENCE_LENGTH} frames"}), 400
 
     for frame in sequence:
         if not isinstance(frame, list) or len(frame) != len(
@@ -75,12 +83,28 @@ def create_recording(user, session_id):
                     ),
                 }
             ), 400
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            for value in frame
+        ):
+            return jsonify({"error": "sequence values must be finite numbers"}), 400
 
     if heuristic_label not in VALID_LABELS:
         return jsonify({"error": "heuristic_label must be correct or incorrect"}), 400
 
-    if not isinstance(rep_index, int):
-        return jsonify({"error": "rep_index is required"}), 400
+    if isinstance(rep_index, bool) or not isinstance(rep_index, int) or rep_index < 1:
+        return jsonify({"error": "rep_index must be a positive integer"}), 400
+
+    confidence = payload.get("heuristic_confidence")
+    if confidence is not None and (
+        isinstance(confidence, bool)
+        or not isinstance(confidence, (int, float))
+        or not math.isfinite(confidence)
+        or not 0 <= confidence <= 1
+    ):
+        return jsonify({"error": "heuristic_confidence must be a number from 0 to 1"}), 400
 
     recording = MovementRecording(
         session_id=rehab_session.id,
@@ -89,7 +113,7 @@ def create_recording(user, session_id):
         sequence=sequence,
         sequence_length=len(sequence),
         heuristic_label=heuristic_label,
-        heuristic_confidence=payload.get("heuristic_confidence"),
+        heuristic_confidence=confidence,
     )
 
     db.session.add(recording)
@@ -105,7 +129,19 @@ def list_recordings(user):
     """List logged repetitions for therapist review. Filter with
     ?status=pending to see only recordings awaiting a therapist label."""
 
-    query = MovementRecording.query
+    query = (
+        MovementRecording.query
+        .join(RehabilitationSession)
+        .join(
+            ExerciseAssignment,
+            and_(
+                ExerciseAssignment.id == RehabilitationSession.assignment_id,
+                ExerciseAssignment.exercise_id == MovementRecording.exercise_id,
+                ExerciseAssignment.therapist_id == user.id,
+            ),
+        )
+        .distinct()
+    )
 
     status = request.args.get("status")
 
@@ -138,6 +174,14 @@ def review_recording(user, recording_id):
     if recording is None:
         return jsonify({"error": "recording not found"}), 404
 
+    assignment = ExerciseAssignment.query.filter_by(
+        id=recording.session.assignment_id,
+        exercise_id=recording.exercise_id,
+        therapist_id=user.id,
+    ).first()
+    if assignment is None:
+        return jsonify({"error": "forbidden"}), 403
+
     payload = request.get_json(silent=True) or {}
     therapist_label = payload.get("therapist_label")
 
@@ -163,7 +207,17 @@ def export_recordings(user):
 
     recordings = (
         MovementRecording.query
+        .join(RehabilitationSession)
+        .join(
+            ExerciseAssignment,
+            and_(
+                ExerciseAssignment.id == RehabilitationSession.assignment_id,
+                ExerciseAssignment.exercise_id == MovementRecording.exercise_id,
+                ExerciseAssignment.therapist_id == user.id,
+            ),
+        )
         .filter(MovementRecording.therapist_label.isnot(None))
+        .distinct()
         .order_by(MovementRecording.id.asc())
         .all()
     )

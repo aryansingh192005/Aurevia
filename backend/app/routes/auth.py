@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request
+import hmac
+
+from flask import Blueprint, current_app, jsonify, request
 
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (
@@ -22,10 +24,7 @@ auth_bp = Blueprint(
 )
 
 
-VALID_ROLES = {
-    "patient",
-    "therapist",
-}
+VALID_ROLES = {"patient", "therapist"}
 
 
 def serialize_user(user):
@@ -47,7 +46,7 @@ def register():
     password = data.get("password")
     role = data.get("role", "patient")
 
-    if not name or not email or not password:
+    if not isinstance(name, str) or not isinstance(email, str) or not isinstance(password, str):
         return jsonify(
             {
                 "error": "name, email, and password are required",
@@ -69,6 +68,9 @@ def register():
             }
         ), 400
 
+    if len(name) > 120 or len(email) > 255:
+        return jsonify({"error": "name or email exceeds the supported length"}), 400
+
     if role not in VALID_ROLES:
         return jsonify(
             {
@@ -76,10 +78,22 @@ def register():
             }
         ), 400
 
-    if len(password) < 8:
+    if role == "therapist":
+        registration_code = current_app.config.get("THERAPIST_REGISTRATION_CODE")
+        submitted_code = data.get("therapist_code")
+        if (
+            not registration_code
+            or not isinstance(submitted_code, str)
+            or not hmac.compare_digest(submitted_code, registration_code)
+        ):
+            return jsonify(
+                {"error": "therapist registration requires a valid invitation code"}
+            ), 403
+
+    if len(password) < 8 or len(password) > 128:
         return jsonify(
             {
-                "error": "password must be at least 8 characters",
+                "error": "password must be between 8 and 128 characters",
             }
         ), 400
 
@@ -130,12 +144,15 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    if not email or not password:
+    if not isinstance(email, str) or not isinstance(password, str):
         return jsonify(
             {
                 "error": "email and password are required",
             }
         ), 400
+
+    if len(password) > 128 or len(email) > 255:
+        return jsonify({"error": "email or password exceeds the supported length"}), 400
 
     email = email.strip().lower()
 

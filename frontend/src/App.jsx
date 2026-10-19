@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import {
   BrowserRouter,
   Navigate,
@@ -10,29 +11,29 @@ import AppLayout from './layouts/AppLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleRoute from './routes/RoleRoute';
 
-import Home from './pages/Home/Home';
-import Login from './pages/Login/Login';
-import Register from './pages/Register/Register';
+import Spinner from './components/Spinner/Spinner';
 
-import Dashboard from './pages/Dashboard/Dashboard';
-import Exercises from './pages/Exercises/Exercises';
-import Sessions from './pages/Sessions/Sessions';
-import Progress from './pages/Progress/Progress';
-import ExerciseSession from './pages/ExerciseSession/ExerciseSession';
-
-import PatientDashboard from './pages/PatientDashboard/PatientDashboard';
-import PatientExercises from './pages/PatientExercises/PatientExercises';
-
-import TherapistDashboard from './pages/TherapistDashboard/TherapistDashboard';
-import TherapistPatients from './pages/TherapistPatients/TherapistPatients';
-import AssignExercise from './pages/AssignExercise/AssignExercise';
-import TherapistResults from './pages/TherapistResults/TherapistResults';
-import TherapistReview from './pages/TherapistReview/TherapistReview';
+const Home = lazy(() => import('./pages/Home/Home'));
+const Login = lazy(() => import('./pages/Login/Login'));
+const Register = lazy(() => import('./pages/Register/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'));
+const Exercises = lazy(() => import('./pages/Exercises/Exercises'));
+const Sessions = lazy(() => import('./pages/Sessions/Sessions'));
+const Progress = lazy(() => import('./pages/Progress/Progress'));
+const ExerciseSession = lazy(() => import('./pages/ExerciseSession/ExerciseSession'));
+const PatientDashboard = lazy(() => import('./pages/PatientDashboard/PatientDashboard'));
+const PatientExercises = lazy(() => import('./pages/PatientExercises/PatientExercises'));
+const TherapistDashboard = lazy(() => import('./pages/TherapistDashboard/TherapistDashboard'));
+const TherapistPatients = lazy(() => import('./pages/TherapistPatients/TherapistPatients'));
+const AssignExercise = lazy(() => import('./pages/AssignExercise/AssignExercise'));
+const TherapistResults = lazy(() => import('./pages/TherapistResults/TherapistResults'));
+const TherapistReview = lazy(() => import('./pages/TherapistReview/TherapistReview'));
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<Spinner label="Loading Aurevia..." fullPage />}>
+        <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
 
@@ -101,7 +102,8 @@ function App() {
             element={<Navigate to="/" replace />}
           />
         </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

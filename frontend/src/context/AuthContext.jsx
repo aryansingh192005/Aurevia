@@ -56,34 +56,35 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function register(name, email, password, role) {
-  setLoading(true);
+  async function register(name, email, password, role, therapistCode) {
+    setLoading(true);
 
-  try {
-    const response = await api.post('/auth/register', {
-      name,
-      email,
-      password,
-      role,
-    });
+    try {
+      const response = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        role,
+        therapist_code: therapistCode,
+      });
 
-    saveUser(response.data.user);
+      saveUser(response.data.user);
 
-    return {
-      success: true,
-      user: response.data.user,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error.response?.data?.error ||
-        'Unable to register. Please try again.',
-    };
-  } finally {
-    setLoading(false);
+      return {
+        success: true,
+        user: response.data.user,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.error ||
+          'Unable to register. Please try again.',
+      };
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   async function logout() {
     try {

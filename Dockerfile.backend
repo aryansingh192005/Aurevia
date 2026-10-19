@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app:/app/backend
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt ./requirements.txt
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r requirements.txt gunicorn==23.0.0
+
+COPY ai ./ai
+COPY backend ./backend
+WORKDIR /app/backend
+
+EXPOSE 5000
+CMD ["sh", "-c", "python -m flask --app run:app db upgrade && gunicorn --bind 0.0.0.0:5000 --workers 1 --threads 4 --timeout 120 run:app"]

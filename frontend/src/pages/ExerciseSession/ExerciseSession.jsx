@@ -42,6 +42,7 @@ function ExerciseSession() {
   const [isSubmittingResult, setIsSubmittingResult] = useState(false);
 
   const [resultSubmitted, setResultSubmitted] = useState(false);
+  const [saveMovementData, setSaveMovementData] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -255,6 +256,7 @@ function ExerciseSession() {
                 active={isLive && !isCompleting}
                 onUpdate={setLiveStats}
                 sessionId={session.id}
+                logRecordings={saveMovementData}
               />
             </div>
           )}
@@ -300,6 +302,23 @@ function ExerciseSession() {
                 Session <strong>#{session.id}</strong> is ready. Position yourself in front of
                 your camera, full body visible, then begin when set.
               </p>
+              <p className="session-panel__disclosure">
+                Your camera video is processed in this browser and is not uploaded. Each
+                completed repetition sends joint-angle measurements to Aurevia for live AI
+                feedback. Those measurements are linked to this session.
+              </p>
+              <label className="session-consent">
+                <input
+                  type="checkbox"
+                  checked={saveMovementData}
+                  onChange={(event) => setSaveMovementData(event.target.checked)}
+                />
+                <span>
+                  Also save my joint-angle repetitions and automatic labels for therapist
+                  review and possible model improvement. I can use the live session without
+                  selecting this option.
+                </span>
+              </label>
               <Button onClick={beginRehabilitation} loading={isStarting} icon={<PlayCircle size={16} />}>
                 Begin Rehabilitation
               </Button>
@@ -319,8 +338,10 @@ function ExerciseSession() {
               </p>
 
               <p className="session-panel__disclosure">
-                Only joint-angle measurements (no video or images) from this session may be
-                used, in de-identified form, to help improve Aurevia's exercise-evaluation AI.
+                Camera video stays in your browser. Joint-angle sequences are sent to the
+                backend for live LSTM prediction. {saveMovementData
+                  ? 'You opted in to storing these sequences with this session for therapist review and possible model improvement.'
+                  : 'Your repetitions are not stored as training recordings.'}
               </p>
 
               {liveStats && (

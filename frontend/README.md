@@ -1,16 +1,7 @@
-# React + Vite
+# Aurevia frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The patient and therapist web application uses React and Vite. From this directory, install the lockfile dependencies with `npm ci`, then run `npm run dev` for local development or `npm run build` to create the production static files.
 
-Currently, two official plugins are available:
+The `predev` and `prebuild` scripts copy the MediaPipe WASM and the checked-in pose landmarker model into ignored `public/` directories. Those local assets are used by live pose tracking, so no runtime CDN access is needed for pose estimation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+For full setup, environment, API, and Docker deployment instructions, see the repository [README](../README.md).

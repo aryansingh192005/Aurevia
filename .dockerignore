@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+!.env.docker.example
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/node_modules
+frontend/dist
+frontend/public/vendor
+frontend/public/models
+backend/instance
+data
+tests
+*.log

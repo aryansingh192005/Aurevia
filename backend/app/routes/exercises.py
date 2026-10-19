@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app.extensions import db
 from app.models import Exercise
+from app.services.auth import require_auth, require_role
 
 
 exercises_bp = Blueprint(
@@ -55,7 +56,9 @@ def get_exercise(exercise_id):
 
 
 @exercises_bp.post("/exercises")
-def create_exercise():
+@require_auth
+@require_role("therapist")
+def create_exercise(user):
     data = request.get_json(silent=True) or {}
 
     name = data.get("name")

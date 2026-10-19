@@ -25,6 +25,13 @@ class RehabilitationSession(db.Model):
         index=True,
     )
 
+    assignment_id = db.Column(
+        db.Integer,
+        db.ForeignKey("exercise_assignments.id"),
+        nullable=True,
+        index=True,
+    )
+
     started_at = db.Column(
         db.DateTime(timezone=True),
         nullable=True,
@@ -56,6 +63,8 @@ class RehabilitationSession(db.Model):
         "Exercise",
         back_populates="sessions",
     )
+
+    assignment = db.relationship("ExerciseAssignment")
 
     results = db.relationship(
         "SessionResult",

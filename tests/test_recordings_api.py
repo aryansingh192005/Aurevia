@@ -81,6 +81,7 @@ def fixture_data(app):
         session = RehabilitationSession(
             user_id=patient.id,
             exercise_id=exercise.id,
+            assignment_id=assignment.id,
             status="started",
         )
 
@@ -89,6 +90,7 @@ def fixture_data(app):
 
         return {
             "session_id": session.id,
+            "assignment_id": assignment.id,
             "patient_email": "patient@example.com",
             "therapist_email": "therapist@example.com",
         }
@@ -181,3 +183,51 @@ def test_patient_cannot_review_recordings(client, fixture_data):
     response = client.get("/api/recordings")
 
     assert response.status_code == 403
+
+
+def test_therapist_only_sees_recordings_for_assigned_patients(client, app, fixture_data):
+    login(client, fixture_data["patient_email"])
+    create_response = client.post(
+        f"/api/sessions/{fixture_data['session_id']}/recordings",
+        json={
+            "rep_index": 1,
+            "sequence": sample_sequence(),
+            "heuristic_label": "correct",
+        },
+    )
+    recording_id = create_response.get_json()["recording"]["id"]
+    client.post("/api/auth/logout")
+
+    with app.app_context():
+        other_therapist = User(
+            name="Other Therapist",
+            email="other-therapist@example.com",
+            password_hash=generate_password_hash("password123"),
+            role="therapist",
+        )
+        db.session.add(other_therapist)
+        db.session.flush()
+        patient = User.query.filter_by(email=fixture_data["patient_email"]).one()
+        exercise = Exercise.query.one()
+        db.session.add(
+            ExerciseAssignment(
+                patient_id=patient.id,
+                therapist_id=other_therapist.id,
+                exercise_id=exercise.id,
+                status="active",
+            )
+        )
+        db.session.commit()
+
+    response = client.post(
+        "/api/auth/login",
+        json={"email": "other-therapist@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+
+    assert client.get("/api/recordings").get_json()["recordings"] == []
+    assert client.patch(
+        f"/api/recordings/{recording_id}",
+        json={"therapist_label": "incorrect"},
+    ).status_code == 403
+    assert client.get("/api/recordings/export").get_json()["count"] == 0

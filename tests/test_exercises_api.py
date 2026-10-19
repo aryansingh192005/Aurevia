@@ -10,6 +10,8 @@ sys.path.insert(
 
 from app import create_app
 from app.extensions import db
+from app.models import User
+from werkzeug.security import generate_password_hash
 
 
 @pytest.fixture()
@@ -37,6 +39,24 @@ def client(app):
     return app.test_client()
 
 
+def login_as_therapist(client, app):
+    with app.app_context():
+        therapist = User(
+            name="Test Therapist",
+            email="therapist@example.com",
+            password_hash=generate_password_hash("password123"),
+            role="therapist",
+        )
+        db.session.add(therapist)
+        db.session.commit()
+
+    response = client.post(
+        "/api/auth/login",
+        json={"email": "therapist@example.com", "password": "password123"},
+    )
+    assert response.status_code == 200
+
+
 def test_get_exercises_empty(client):
     response = client.get("/api/exercises")
 
@@ -46,7 +66,8 @@ def test_get_exercises_empty(client):
     }
 
 
-def test_create_exercise(client):
+def test_create_exercise(client, app):
+    login_as_therapist(client, app)
     response = client.post(
         "/api/exercises",
         json={
@@ -67,7 +88,8 @@ def test_create_exercise(client):
     assert data["exercise"]["difficulty"] == "Beginner"
 
 
-def test_create_exercise_requires_name(client):
+def test_create_exercise_requires_name(client, app):
+    login_as_therapist(client, app)
     response = client.post(
         "/api/exercises",
         json={
@@ -81,7 +103,8 @@ def test_create_exercise_requires_name(client):
     }
 
 
-def test_get_existing_exercise(client):
+def test_get_existing_exercise(client, app):
+    login_as_therapist(client, app)
     create_response = client.post(
         "/api/exercises",
         json={
@@ -106,6 +129,12 @@ def test_get_existing_exercise(client):
 
     assert data["exercise"]["id"] == exercise_id
     assert data["exercise"]["name"] == "Knee Extension"
+
+
+def test_create_exercise_requires_therapist_authentication(client):
+    response = client.post("/api/exercises", json={"name": "Unauthorized"})
+
+    assert response.status_code == 401
 
 
 def test_get_nonexistent_exercise(client):

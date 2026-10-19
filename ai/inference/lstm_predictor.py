@@ -11,6 +11,7 @@ yet" everywhere.
 """
 
 from pathlib import Path
+from threading import Lock
 from typing import Optional
 
 import numpy as np
@@ -28,31 +29,35 @@ class LSTMPredictor:
         self.model_path = Path(model_path) if model_path else DEFAULT_MODEL_PATH
         self._model = None
         self._load_attempted = False
+        self._load_lock = Lock()
 
     def _ensure_loaded(self) -> bool:
         if self._model is not None:
             return True
 
-        if self._load_attempted:
-            return False
+        with self._load_lock:
+            if self._model is not None:
+                return True
 
-        self._load_attempted = True
-
-        if not self.model_path.exists():
-            return False
-
-        try:
-            from tensorflow import keras
-
-            model = keras.models.load_model(self.model_path)
-            if tuple(model.input_shape) != (None, SEQUENCE_LENGTH, FEATURE_COUNT):
+            if self._load_attempted:
                 return False
-            self._model = model
-            return True
-        except Exception:
-            # A corrupt/incompatible model file should never crash the
-            # request path -- just fall back to "no model available".
-            return False
+
+            self._load_attempted = True
+
+            if not self.model_path.exists():
+                return False
+
+            try:
+                from tensorflow import keras
+
+                model = keras.models.load_model(self.model_path)
+                if tuple(model.input_shape) != (None, SEQUENCE_LENGTH, FEATURE_COUNT):
+                    return False
+                self._model = model
+                return True
+            except Exception:
+                # A corrupt/incompatible model must not crash request handling.
+                return False
 
     @property
     def is_available(self) -> bool:

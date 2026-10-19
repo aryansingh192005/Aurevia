@@ -7,6 +7,9 @@ from app.models import Exercise, User
 
 app = create_app()
 
+if app.config.get("FLASK_ENV") == "production":
+    raise RuntimeError("The demo seed must never be run in production.")
+
 
 with app.app_context():
     patient = db.session.scalar(
