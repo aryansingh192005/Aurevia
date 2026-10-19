@@ -16,6 +16,7 @@ import PageHeader from '../../components/PageHeader/PageHeader';
 import StatCard from '../../components/StatCard/StatCard';
 import Card from '../../components/Card/Card';
 import Spinner from '../../components/Spinner/Spinner';
+import Alert from '../../components/Alert/Alert';
 
 import './PatientDashboard.css';
 
@@ -25,23 +26,34 @@ function PatientDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadData() {
       try {
-        const [assignmentsRes, sessionsRes] = await Promise.all([
+        const [assignmentsResult, sessionsResult] = await Promise.allSettled([
           api.get('/assignments'),
           api.get('/sessions'),
         ]);
 
         if (!isMounted) return;
 
-        setAssignments(assignmentsRes.data.assignments || []);
-        setSessions(sessionsRes.data.sessions || []);
-      } catch {
-        // Dashboard summary is best-effort; individual pages surface errors.
+        const unavailable = [];
+        if (assignmentsResult.status === 'fulfilled') {
+          setAssignments(assignmentsResult.value.data.assignments || []);
+        } else {
+          unavailable.push('assigned exercises');
+        }
+        if (sessionsResult.status === 'fulfilled') {
+          setSessions(sessionsResult.value.data.sessions || []);
+        } else {
+          unavailable.push('session history');
+        }
+        if (unavailable.length > 0) {
+          setError(`Could not load ${unavailable.join(' and ')}. Refresh the page or open that section to try again.`);
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -78,6 +90,8 @@ function PatientDashboard() {
         title={`Welcome back, ${user?.name?.split(' ')[0] || 'there'}`}
         description="Your rehabilitation journey at a glance."
       />
+
+      {error && <Alert variant="error">{error}</Alert>}
 
       <div className="stats-row">
         <StatCard
