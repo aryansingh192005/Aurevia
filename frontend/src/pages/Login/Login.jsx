@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import Alert from '../../components/Alert/Alert';
 import FormField from '../../components/FormField/FormField';
 import Button from '../../components/Button/Button';
+import Spinner from '../../components/Spinner/Spinner';
 
 import '../../styles/auth.css';
 
@@ -15,12 +16,17 @@ function Login() {
   const {
     login,
     loading,
+    isReady,
     isAuthenticated,
   } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  if (!isReady) {
+    return <Spinner label="Checking your session..." fullPage />;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;

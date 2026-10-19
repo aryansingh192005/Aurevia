@@ -1,9 +1,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
+import Spinner from '../components/Spinner/Spinner';
 import { useAuth } from '../context/AuthContext';
 
 function RoleRoute({ allowedRole }) {
-  const { user } = useAuth();
+  const { user, isReady } = useAuth();
+
+  if (!isReady) {
+    return <Spinner label="Checking your session..." fullPage />;
+  }
 
   if (!user) {
     return (

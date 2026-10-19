@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 import api from '../services/api';
 
@@ -23,6 +23,8 @@ export function AuthProvider({ children }) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const initialUserRef = useRef(user);
 
   function saveUser(userData) {
     setUser(userData);
@@ -98,32 +100,43 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
+    let isActive = true;
 
     async function verifySession() {
+      if (!initialUserRef.current) {
+        setIsReady(true);
+        return;
+      }
+
       try {
         const response = await api.get('/auth/me');
 
-        if (response.data.user) {
+        if (isActive && response.data.user) {
           saveUser(response.data.user);
+        } else if (isActive) {
+          setUser(null);
+          localStorage.removeItem(STORAGE_KEY);
         }
       } catch {
-        setUser(null);
-        localStorage.removeItem(STORAGE_KEY);
+        if (isActive) {
+          setUser(null);
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      } finally {
+        if (isActive) setIsReady(true);
       }
     }
 
     verifySession();
     // Runs once on mount to verify the persisted session is still valid.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { isActive = false; };
   }, []);
 
   const value = {
     user,
     loading,
-    isAuthenticated: Boolean(user),
+    isReady,
+    isAuthenticated: isReady && Boolean(user),
     login,
     register,
     logout,

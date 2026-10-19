@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, HeartPulse, Lock, Mail, Stethoscope, User } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import Alert from '../../components/Alert/Alert';
 import FormField from '../../components/FormField/FormField';
 import Button from '../../components/Button/Button';
+import Spinner from '../../components/Spinner/Spinner';
 
 import '../../styles/auth.css';
 
 function Register() {
   const navigate = useNavigate();
 
-  const { register, loading } = useAuth();
+  const { register, loading, isReady, isAuthenticated } = useAuth();
 
   const [form, setForm] = useState({
     name: '',
@@ -23,6 +24,14 @@ function Register() {
   });
 
   const [error, setError] = useState('');
+
+  if (!isReady) {
+    return <Spinner label="Checking your session..." fullPage />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
