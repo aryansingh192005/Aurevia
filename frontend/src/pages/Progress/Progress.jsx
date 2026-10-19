@@ -76,8 +76,11 @@ function Progress() {
   const streakDay = new Date();
   if (!daySet.has(streakDay.toLocaleDateString())) streakDay.setDate(streakDay.getDate() - 1);
   while (daySet.has(streakDay.toLocaleDateString())) { currentStreak += 1; streakDay.setDate(streakDay.getDate() - 1); }
-  const accuracyRecords = [...progress].filter((record) => record.metric_name === 'accuracy').sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
-  const accuracyChange = accuracyRecords.length >= 2 ? Math.round(accuracyRecords[accuracyRecords.length - 1].metric_value - accuracyRecords[0].metric_value) : null;
+  const analyzedSessionCount = new Set(
+    progress
+      .filter((record) => record.metric_name === 'accuracy')
+      .map((record) => record.session_id),
+  ).size;
 
   const exerciseNames = useMemo(() => {
     const sessionById = new Map(sessions.map((session) => [session.id, session]));
@@ -133,7 +136,7 @@ function Progress() {
         <div className="progress-insight"><span className="progress-insight__value">{completedSessions.length}</span><span className="progress-insight__label">sessions completed</span><span className="progress-insight__hint">Every session counts</span></div>
         <div className="progress-insight"><span className="progress-insight__value">{thisWeek}</span><span className="progress-insight__label">this week</span><span className="progress-insight__hint">Your weekly rhythm</span></div>
         <div className="progress-insight"><span className="progress-insight__value">{currentStreak} day{currentStreak === 1 ? '' : 's'}</span><span className="progress-insight__label">current streak</span><span className="progress-insight__hint">Rest days are part of recovery</span></div>
-        <div className="progress-insight"><span className="progress-insight__value">{accuracyChange === null ? '—' : `${accuracyChange > 0 ? '+' : ''}${accuracyChange}%`}</span><span className="progress-insight__label">change in AI-labeled correct reps</span><span className="progress-insight__hint">Movement-analysis estimate, not clinical accuracy</span></div>
+        <div className="progress-insight"><span className="progress-insight__value">{analyzedSessionCount}</span><span className="progress-insight__label">sessions with movement analysis</span><span className="progress-insight__hint">Estimates are informational, not clinical scores</span></div>
       </div>
 
       <div className="progress-milestones" aria-label="Consistency milestones">
