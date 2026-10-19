@@ -13,8 +13,9 @@ const MODEL_URL = '/models/pose_landmarker_lite.task';
 /**
  * Runs live, in-browser AI pose estimation over the user's webcam feed
  * using MediaPipe Tasks Vision, draws a skeleton overlay, and drives a
- * RepCounter to produce a real result_data payload (no camera/model calls
- * ever leave the browser).
+ * RepCounter to produce a real result_data payload. Camera video and pose
+ * estimation stay in the browser; derived joint-angle sequences can be sent
+ * to the API for optional recording and live LSTM inference.
  */
 const PoseCamera = forwardRef(function PoseCamera(
   { targetArea, active, onUpdate, sessionId, logRecordings = false, paused = false },

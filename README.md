@@ -8,7 +8,7 @@ Aurevia is a web-based telerehabilitation prototype for patients and therapists.
 - Flask API with role-aware authentication, exercise assignments, sessions, progress history, and therapist review endpoints.
 - MySQL support for persistent deployment and SQLite as the zero-configuration local-development fallback.
 - Database migrations managed by Flask-Migrate/Alembic.
-- In-browser MediaPipe pose tracking. Camera frames stay in the browser; the app sends derived 8-angle sequences to the API when repetition recording is enabled.
+- In-browser MediaPipe pose tracking. Camera frames stay in the browser; derived 8-angle sequences are sent to the API for live LSTM inference. Separately, patients can opt in to saving repetition sequences for therapist review and possible training use.
 - A trained LSTM model at `ai/models/lstm/exercise_quality_lstm.keras`, expecting 30 frames by 8 angles in the documented feature order.
 - A Docker Compose deployment with MySQL, the API, and the static web app.
 
