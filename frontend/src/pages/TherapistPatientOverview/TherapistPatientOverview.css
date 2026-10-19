@@ -1,0 +1,22 @@
+.patient-overview-page { display: grid; gap: 24px; }
+.patient-overview-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.patient-overview-stats > .aurevia-card { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 4px 10px; padding: 16px; color: var(--color-primary-700); }
+.patient-overview-stats strong { color: var(--color-neutral-900); font: 700 1.1rem var(--font-family-display); }
+.patient-overview-stats span { grid-column: 2; color: var(--color-neutral-500); font-size: .77rem; }
+.patient-overview-section { display: grid; gap: 12px; }
+.patient-overview-section__heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.patient-overview-section__heading h2 { margin: 0; color: var(--color-neutral-900); font-size: 1.1rem; }
+.patient-overview-section__heading p { margin: 4px 0 0; color: var(--color-neutral-500); font-size: .84rem; }
+.patient-overview-section__heading > a { color: var(--color-primary-700); font-size: .84rem; font-weight: 650; }
+.patient-overview-list { display: grid; gap: 10px; }
+.patient-overview-item, .patient-overview-result { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 16px 18px; }
+.patient-overview-item h3, .patient-overview-result h3, .patient-overview-plan h3 { margin: 0; color: var(--color-neutral-900); font-size: .98rem; }
+.patient-overview-item p, .patient-overview-result p { margin: 4px 0 0; color: var(--color-neutral-500); font-size: .83rem; }
+.patient-overview-cue { margin: 12px 0 0; color: var(--color-neutral-700); font-size: .86rem; line-height: 1.55; }
+.patient-overview-plan { padding: 16px 18px; }
+.patient-overview-plan ul { display: grid; gap: 6px; margin: 12px 0 0; padding-left: 20px; color: var(--color-neutral-600); font-size: .83rem; }
+.patient-overview-result__metrics { display: flex; flex-wrap: wrap; gap: 8px; }
+.patient-overview-result__metrics span { padding: 7px 9px; border-radius: 9px; background: var(--color-neutral-50); color: var(--color-neutral-600); font-size: .76rem; white-space: nowrap; }
+.patient-overview-result__metrics strong { color: var(--color-primary-700); }
+@media (max-width: 820px) { .patient-overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .patient-overview-item, .patient-overview-result { align-items: flex-start; flex-direction: column; } .patient-overview-stats > .card { padding: 12px; } }

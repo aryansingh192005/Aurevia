@@ -27,6 +27,7 @@ const PatientPlans = lazy(() => import('./pages/PatientPlans/PatientPlans'));
 const Privacy = lazy(() => import('./pages/Privacy/Privacy'));
 const TherapistDashboard = lazy(() => import('./pages/TherapistDashboard/TherapistDashboard'));
 const TherapistPatients = lazy(() => import('./pages/TherapistPatients/TherapistPatients'));
+const TherapistPatientOverview = lazy(() => import('./pages/TherapistPatientOverview/TherapistPatientOverview'));
 const AssignExercise = lazy(() => import('./pages/AssignExercise/AssignExercise'));
 const TherapistPlans = lazy(() => import('./pages/TherapistPlans/TherapistPlans'));
 const TherapistResults = lazy(() => import('./pages/TherapistResults/TherapistResults'));
@@ -86,6 +87,8 @@ function App() {
               path="/therapist/patients"
               element={<TherapistPatients />}
             />
+
+            <Route path="/therapist/patients/:patientId" element={<TherapistPatientOverview />} />
 
             <Route
               path="/therapist/assign-exercise"

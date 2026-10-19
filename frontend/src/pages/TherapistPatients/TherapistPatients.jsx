@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, ClipboardList, Mail, Search, Users } from 'lucide-react';
+import { Activity, ClipboardList, Eye, Mail, Search, Users } from 'lucide-react';
 
 import api from '../../services/api';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -106,7 +106,7 @@ function TherapistPatients() {
               </div>
               <span className="patient-card__id">#{patient.id}</span>
               <div className="patient-card__summary"><span><ClipboardList size={14} /> {activeExerciseCount} active exercise{activeExerciseCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {savedSessions.size} saved session result{savedSessions.size === 1 ? '' : 's'}</span>{latestCompletedAt && <small>Latest result {new Date(latestCompletedAt).toLocaleDateString()}</small>}</div>
-              <Link className="patient-card__action" to={`/therapist/assign-exercise?patient_id=${patient.id}`}><Button variant="secondary" fullWidth icon={<ClipboardList size={15} />}>Assign exercise</Button></Link>
+              <div className="patient-card__actions"><Link to={`/therapist/patients/${patient.id}`}><Button variant="secondary" fullWidth icon={<Eye size={15} />}>Overview</Button></Link><Link to={`/therapist/assign-exercise?patient_id=${patient.id}`}><Button variant="secondary" fullWidth icon={<ClipboardList size={15} />}>Assign exercise</Button></Link></div>
             </Card>
           );})}
         </div>}
