@@ -46,9 +46,13 @@
     align-items: flex-start;
   }
 }
-.session-therapist-notes { grid-column: 1 / -1; width: 100%; padding: 10px 13px; border-radius: 10px; background: var(--color-primary-50); color: var(--color-neutral-700); }
-.session-therapist-notes p { margin: 0; line-height: 1.5; }
-.session-therapist-notes p + p { margin-top: 8px; }
+.session-therapist-notes { width: 100%; padding: 14px 16px; border: 1px solid var(--color-primary-100); border-radius: 12px; background: var(--color-primary-50); color: var(--color-neutral-700); }
+.session-therapist-notes__title { display: block; margin-bottom: 8px; color: var(--color-primary-800); font-size: var(--font-size-xs); }
+.session-therapist-notes__item + .session-therapist-notes__item { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-primary-100); }
+.session-therapist-notes__item > div { display: flex; align-items: center; gap: 10px; }
+.session-therapist-notes__item > div strong { color: var(--color-neutral-900); font-size: var(--font-size-xs); }
+.session-therapist-notes__item time { color: var(--color-neutral-500); font-size: var(--font-size-xs); }
+.session-therapist-notes__item p { margin: 5px 0 0; line-height: 1.5; white-space: pre-wrap; }
 .session-result { width: 100%; padding: 14px 16px; border: 1px solid var(--color-neutral-200); border-radius: 12px; background: var(--color-neutral-50); color: var(--color-neutral-700); font-size: var(--font-size-xs); }
 .session-result > strong { color: var(--color-neutral-900); }
 .session-result__metrics { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }

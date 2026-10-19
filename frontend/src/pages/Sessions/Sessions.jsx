@@ -22,7 +22,6 @@ function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [feedback, setFeedback] = useState({});
 
   useEffect(() => {
     let isMounted = true;
@@ -35,11 +34,6 @@ function Sessions() {
 
         const loaded = response.data.sessions || [];
         setSessions(loaded);
-        const notes = await Promise.all(loaded.filter((session) => session.status === 'completed').map(async (session) => {
-          try { return [session.id, (await api.get(`/sessions/${session.id}/feedback`)).data.feedback || []]; }
-          catch { return [session.id, []]; }
-        }));
-        if (isMounted) setFeedback(Object.fromEntries(notes));
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -138,12 +132,16 @@ function Sessions() {
                   ) : <span className="session-result__empty">No summary was saved for this session.</span>}
                 </div>
               )}
-              {(feedback[session.id] || []).length > 0 && (
-                <div className="session-therapist-notes" aria-label="Therapist feedback">
-                  {(feedback[session.id] || []).map((note) => (
-                    <p key={note.id}><strong>{note.therapist.name}:</strong> {note.message}</p>
+              {(session.therapist_feedback || []).length > 0 && (
+                <section className="session-therapist-notes" aria-label="Therapist feedback">
+                  <strong className="session-therapist-notes__title">Therapist feedback</strong>
+                  {(session.therapist_feedback || []).map((note) => (
+                    <article key={note.id} className="session-therapist-notes__item">
+                      <div><strong>{note.therapist.name}</strong><time dateTime={note.created_at}>{new Date(note.created_at).toLocaleDateString()}</time></div>
+                      <p>{note.message}</p>
+                    </article>
                   ))}
-                </div>
+                </section>
               )}
             </Card>
           ))}

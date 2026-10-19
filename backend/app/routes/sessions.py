@@ -65,6 +65,18 @@ def session_to_dict(session, include_result=False):
             if result is not None
             else None
         )
+        session_data["therapist_feedback"] = [
+            {
+                "id": feedback.id,
+                "message": feedback.message,
+                "created_at": feedback.created_at.isoformat(),
+                "therapist": {
+                    "id": feedback.therapist.id,
+                    "name": feedback.therapist.name,
+                },
+            }
+            for feedback in session.therapist_feedback
+        ]
 
     return session_data
 
