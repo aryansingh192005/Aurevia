@@ -35,6 +35,9 @@ function Progress() {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [exerciseFilter, setExerciseFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
+  const [loadedAt] = useState(() => Date.now());
 
   useEffect(() => {
     let isMounted = true;
@@ -76,10 +79,24 @@ function Progress() {
   const accuracyRecords = [...progress].filter((record) => record.metric_name === 'accuracy').sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
   const accuracyChange = accuracyRecords.length >= 2 ? Math.round(accuracyRecords[accuracyRecords.length - 1].metric_value - accuracyRecords[0].metric_value) : null;
 
+  const exerciseNames = useMemo(() => {
+    const sessionById = new Map(sessions.map((session) => [session.id, session]));
+    return [...new Set(progress.map((record) => sessionById.get(record.session_id)?.exercise?.name).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  }, [progress, sessions]);
+  const filteredProgress = useMemo(() => {
+    const sessionById = new Map(sessions.map((session) => [session.id, session]));
+    const cutoff = periodFilter === 'all' ? null : new Date(loadedAt - Number(periodFilter) * 24 * 60 * 60 * 1000);
+    return progress.filter((record) => {
+      const session = sessionById.get(record.session_id);
+      if (exerciseFilter !== 'all' && session?.exercise?.name !== exerciseFilter) return false;
+      return !cutoff || new Date(record.recorded_at) >= cutoff;
+    });
+  }, [exerciseFilter, loadedAt, periodFilter, progress, sessions]);
+
   const grouped = useMemo(() => {
     const byMetric = {};
 
-    [...progress]
+    [...filteredProgress]
       .sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at))
       .forEach((record) => {
         if (!byMetric[record.metric_name]) {
@@ -96,7 +113,7 @@ function Progress() {
       });
 
     return byMetric;
-  }, [progress]);
+  }, [filteredProgress]);
 
   if (isLoading) {
     return <Spinner label="Loading your progress..." fullPage />;
@@ -124,11 +141,16 @@ function Progress() {
         {[1, 5, 10, 25].map((milestone) => <span key={milestone} className={completedSessions.length >= milestone ? 'progress-milestone is-earned' : 'progress-milestone'}>{completedSessions.length >= milestone ? '✓ ' : ''}{milestone} sessions</span>)}
       </div>
 
-      {progress.length === 0 && !error ? (
+      {progress.length > 0 && <div className="progress-filters" aria-label="Filter progress charts">
+        <label>Exercise<select value={exerciseFilter} onChange={(event) => setExerciseFilter(event.target.value)}><option value="all">All exercises</option>{exerciseNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
+        <label>Time period<select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value)}><option value="all">All time</option><option value="30">Last 30 days</option><option value="90">Last 3 months</option><option value="365">Last year</option></select></label>
+      </div>}
+
+      {filteredProgress.length === 0 && !error ? (
         <EmptyState
           icon={<BarChart3 size={28} />}
-          title="No progress data yet"
-          description="Complete a session to start building your progress history. Your highlights above celebrate consistency, not perfection."
+          title={progress.length === 0 ? 'No progress data yet' : 'No results for these filters'}
+          description={progress.length === 0 ? 'Complete a session to start building your progress history. Your highlights above celebrate consistency, not perfection.' : 'Try a different exercise or time period to see more of your history.'}
         />
       ) : (
         <div className="progress-grid">

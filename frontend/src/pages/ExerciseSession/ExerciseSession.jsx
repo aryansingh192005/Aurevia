@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   Award,
   CheckCircle2,
@@ -28,6 +28,8 @@ function stepIndex(status) {
 
 function ExerciseSession() {
   const { assignmentId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const existingSessionId = searchParams.get('session_id');
   const poseCameraRef = useRef(null);
 
   const [assignment, setAssignment] = useState(null);
@@ -54,11 +56,25 @@ function ExerciseSession() {
 
     async function loadAssignment() {
       try {
-        const response = await api.get(`/assignments/${assignmentId}`);
+        const [response, sessionResponse] = await Promise.all([
+          api.get(`/assignments/${assignmentId}`),
+          existingSessionId ? api.get(`/sessions/${existingSessionId}`) : Promise.resolve(null),
+        ]);
 
         if (!isMounted) return;
 
         setAssignment(response.data.assignment);
+        if (sessionResponse) {
+          const existingSession = sessionResponse.data.session;
+          if (existingSession.assignment_id !== response.data.assignment.id) {
+            setError('This session does not belong to the selected exercise.');
+          } else if (!['created', 'started'].includes(existingSession.status)) {
+            setError('This session is already complete. Start a new session from your assigned exercises.');
+          } else {
+            setSession(existingSession);
+            setTrainingConsent(Boolean(existingSession.movement_recording_consent));
+          }
+        }
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -76,7 +92,7 @@ function ExerciseSession() {
     return () => {
       isMounted = false;
     };
-  }, [assignmentId]);
+  }, [assignmentId, existingSessionId]);
 
   async function createSession() {
     if (!assignment) return;
@@ -90,6 +106,7 @@ function ExerciseSession() {
       });
 
       setSession(response.data.session);
+      setSearchParams({ session_id: response.data.session.id }, { replace: true });
     } catch (requestError) {
       setError(
         requestError.response?.data?.error ||

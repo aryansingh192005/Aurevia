@@ -21,6 +21,7 @@ const STATUS_TONE = {
 
 function PatientExercises() {
   const [assignments, setAssignments] = useState([]);
+  const [unfinishedSessions, setUnfinishedSessions] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -29,11 +30,19 @@ function PatientExercises() {
 
     async function loadAssignments() {
       try {
-        const response = await api.get('/assignments');
+        const [response, sessionResponse] = await Promise.all([api.get('/assignments'), api.get('/sessions')]);
 
         if (!isMounted) return;
 
-        setAssignments(response.data.assignments || []);
+        const loadedAssignments = response.data.assignments || [];
+        const openSessions = {};
+        for (const session of sessionResponse.data.sessions || []) {
+          if (['created', 'started'].includes(session.status) && session.assignment_id && !openSessions[session.assignment_id]) {
+            openSessions[session.assignment_id] = session;
+          }
+        }
+        setAssignments(loadedAssignments);
+        setUnfinishedSessions(openSessions);
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -110,11 +119,11 @@ function PatientExercises() {
                 </div>
               </div>
 
-              <Link to={`/patient/exercises/${assignment.id}/start`}>
+              {assignment.status === 'active' ? <Link to={`/patient/exercises/${assignment.id}/start${unfinishedSessions[assignment.id] ? `?session_id=${unfinishedSessions[assignment.id].id}` : ''}`}>
                 <Button fullWidth icon={<PlayCircle size={16} />}>
-                  Start Exercise
+                  {unfinishedSessions[assignment.id] ? 'Resume Session' : 'Start Exercise'}
                 </Button>
-              </Link>
+              </Link> : <p className="exercise-card__paused">Your therapist has paused this exercise. Contact them before continuing.</p>}
             </Card>
           ))}
         </div>

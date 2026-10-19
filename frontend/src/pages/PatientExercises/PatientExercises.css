@@ -79,3 +79,4 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
 }
+.exercise-card__paused { margin: 0; color: var(--color-neutral-600); font-size: var(--font-size-sm); line-height: 1.5; }
