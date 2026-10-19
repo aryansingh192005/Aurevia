@@ -1,6 +1,7 @@
 .care-plans-page { display: grid; gap: 24px; }
 .plan-builder { padding: 24px; }
 .plan-builder__intro { display: flex; gap: 12px; align-items: flex-start; color: var(--color-primary-700); margin-bottom: 20px; }
+.plan-builder__intro > button { margin-left: auto; flex-shrink: 0; }
 .plan-builder__intro h2, .plan-exercises-heading h3, .care-plans-list h2 { margin: 0; color: var(--color-neutral-900); }
 .plan-builder__intro p { margin: 5px 0 0; color: var(--color-neutral-500); }
 .plan-form { display: grid; gap: 20px; }
