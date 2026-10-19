@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardList, Mail, Users } from 'lucide-react';
+import { Activity, ClipboardList, Mail, Search, Users } from 'lucide-react';
 
 import api from '../../services/api';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -14,6 +14,9 @@ import './TherapistPatients.css';
 
 function TherapistPatients() {
   const [patients, setPatients] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [results, setResults] = useState([]);
+  const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -22,11 +25,15 @@ function TherapistPatients() {
 
     async function loadPatients() {
       try {
-        const response = await api.get('/patients');
+        const [response, assignmentResponse, resultResponse] = await Promise.all([
+          api.get('/patients'), api.get('/assignments'), api.get('/session-results'),
+        ]);
 
         if (!isMounted) return;
 
         setPatients(response.data.patients || []);
+        setAssignments(assignmentResponse.data.assignments || []);
+        setResults(resultResponse.data.results || []);
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -42,6 +49,11 @@ function TherapistPatients() {
       isMounted = false;
     };
   }, []);
+
+  const filteredPatients = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase();
+    return patients.filter((patient) => !query || `${patient.name} ${patient.email}`.toLocaleLowerCase().includes(query));
+  }, [patients, search]);
 
   if (isLoading) {
     return <Spinner label="Loading patients..." fullPage />;
@@ -68,9 +80,20 @@ function TherapistPatients() {
           title="No patients found"
           description="There are currently no registered patients."
         />
-      ) : (
+      ) : patients.length > 0 && (
+        <>
+          <div className="patient-directory-tools">
+            <label className="patient-search"><Search size={17} /><span className="visually-hidden">Search patients</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by patient name or email" /></label>
+            <span className="patient-directory-count">{filteredPatients.length} of {patients.length} patients</span>
+          </div>
+          {filteredPatients.length === 0 ? <EmptyState icon={<Search size={26} />} title="No matching patients" description="Try another name or email address." /> :
         <div className="patient-grid">
-          {patients.map((patient) => (
+          {filteredPatients.map((patient) => {
+            const activeExerciseCount = assignments.filter((assignment) => assignment.patient.id === patient.id && assignment.status === 'active').length;
+            const patientResults = results.filter((result) => result.patient.id === patient.id);
+            const savedSessions = new Set(patientResults.map((result) => result.session.id));
+            const latestCompletedAt = patientResults.map((result) => result.session.completed_at).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))[0];
+            return (
             <Card key={patient.id} hoverable className="patient-card">
               <span className="patient-card__avatar">
                 {patient.name.charAt(0).toUpperCase()}
@@ -82,9 +105,12 @@ function TherapistPatients() {
                 </span>
               </div>
               <span className="patient-card__id">#{patient.id}</span>
+              <div className="patient-card__summary"><span><ClipboardList size={14} /> {activeExerciseCount} active exercise{activeExerciseCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {savedSessions.size} saved session result{savedSessions.size === 1 ? '' : 's'}</span>{latestCompletedAt && <small>Latest result {new Date(latestCompletedAt).toLocaleDateString()}</small>}</div>
+              <Link className="patient-card__action" to={`/therapist/assign-exercise?patient_id=${patient.id}`}><Button variant="secondary" fullWidth icon={<ClipboardList size={15} />}>Assign exercise</Button></Link>
             </Card>
-          ))}
-        </div>
+          );})}
+        </div>}
+        </>
       )}
     </div>
   );

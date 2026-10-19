@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ClipboardCheck, Dumbbell, Hash, User } from 'lucide-react';
 
 import api from '../../services/api';
@@ -14,12 +14,13 @@ import './AssignExercise.css';
 
 function AssignExercise() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [patients, setPatients] = useState([]);
   const [exercises, setExercises] = useState([]);
 
   const [formData, setFormData] = useState({
-    patient_id: '',
+    patient_id: searchParams.get('patient_id') || '',
     exercise_id: '',
     target_sets: 3,
     target_reps: 10,
