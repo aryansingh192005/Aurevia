@@ -35,7 +35,7 @@ const PoseCamera = forwardRef(function PoseCamera(
 
   const [status, setStatus] = useState('loading'); // loading | ready | denied | error
   const [errorMessage, setErrorMessage] = useState('');
-  const [liveFeedback, setLiveFeedback] = useState('Loading AI model...');
+  const [liveFeedback, setLiveFeedback] = useState('Loading movement analysis...');
   const [modelAvailable, setModelAvailable] = useState(null);
   const [aiPredictions, setAiPredictions] = useState([]);
 
@@ -119,7 +119,7 @@ const PoseCamera = forwardRef(function PoseCamera(
           setModelAvailable(modelAvailableRef.current);
         } catch {
           modelAvailableRef.current = false;
-          setModelAvailable(false);
+          setModelAvailable(null);
         }
         repCounterRef.current = new RepCounter(targetArea, { onRepComplete: logRep });
         setStatus('ready');
@@ -319,17 +319,14 @@ const PoseCamera = forwardRef(function PoseCamera(
 
       {status === 'ready' && active && (
         <>
-          <div className="pose-camera__feedback">{liveFeedback}</div>
-          {modelAvailable === false && (
-            <div className="pose-camera__feedback">
-              Trained LSTM unavailable; using movement-range feedback.
-            </div>
-          )}
-          {modelAvailable && aiPredictions.length > 0 && (
-            <div className="pose-camera__feedback">
-              LSTM predictions received: {aiPredictions.length}
-            </div>
-          )}
+          <div className="pose-camera__feedback" role="status" aria-live="polite">{liveFeedback}</div>
+          <div className="pose-camera__feedback" role="status" aria-live="polite">
+            {modelAvailable === false && 'Trained LSTM is unavailable; pose-based movement estimates are being used.'}
+            {modelAvailable === null && 'LSTM status could not be confirmed; pose-based movement estimates are being used.'}
+            {modelAvailable === true && (aiPredictions.length > 0
+              ? `Trained LSTM active: predictions received for ${aiPredictions.length} repetition${aiPredictions.length === 1 ? '' : 's'}.`
+              : 'Trained LSTM is available; predictions will appear after a repetition is completed.')}
+          </div>
         </>
       )}
     </div>
