@@ -265,7 +265,7 @@ export class RepCounter {
       incorrect_repetitions: this.incorrectReps,
       accuracy,
       feedback: totalReps > 0
-        ? `Completed ${totalReps} reps with ${accuracy}% form accuracy, tracked live via AI pose estimation.`
+        ? `Movement analysis labeled ${this.correctReps} of ${totalReps} repetitions as correct (${accuracy}%). This is an estimate, not a clinical measure.`
         : 'No repetitions were detected during this session.',
     };
   }

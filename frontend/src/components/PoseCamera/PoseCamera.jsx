@@ -271,7 +271,7 @@ const PoseCamera = forwardRef(function PoseCamera(
           incorrect_repetitions: predictions.length - correct,
           accuracy,
           analysis_source: 'lstm',
-          feedback: `LSTM analysis: ${correct} of ${predictions.length} repetitions classified as correct.`,
+          feedback: `LSTM movement analysis labeled ${correct} of ${predictions.length} repetitions as correct.`,
         };
       }
 

@@ -52,7 +52,7 @@ const STEPS = [
   },
   {
     title: 'Get instant feedback',
-    description: 'See accuracy, form, and reps the moment you finish a set.',
+    description: 'See movement-analysis estimates, form cues, and reps as you exercise.',
   },
   {
     title: 'Track real progress',

@@ -163,9 +163,12 @@ function Sessions() {
                           <span><b>{session.result.result_data.correct_repetitions}</b> correct reps</span>
                         )}
                         {typeof session.result.result_data?.accuracy === 'number' && (
-                          <span><b>{session.result.result_data.accuracy}%</b> accuracy</span>
+                          <span><b>{session.result.result_data.accuracy}%</b> AI-labeled correct reps</span>
                         )}
                       </div>
+                      {typeof session.result.result_data?.accuracy === 'number' && (
+                        <span className="session-result__source">Movement analysis · {session.result.result_data.analysis_source === 'lstm' ? 'LSTM model' : session.result.result_data.analysis_source === 'heuristic' ? 'pose-based estimate' : 'source not recorded'} · informational estimate</span>
+                      )}
                       {session.result.result_data?.patient_check_in && (
                         <div className="session-result__checkin">
                           <strong>Your check-in · self-reported</strong>

@@ -11,11 +11,10 @@ import Alert from '../../components/Alert/Alert';
 
 import './TherapistResults.css';
 
-function accuracyTone(accuracy) {
-  if (accuracy == null) return 'neutral';
-  if (accuracy >= 85) return 'success';
-  if (accuracy >= 60) return 'warning';
-  return 'danger';
+function analysisSourceLabel(source) {
+  if (source === 'lstm') return 'LSTM model';
+  if (source === 'heuristic') return 'pose-based estimate';
+  return 'source not recorded';
 }
 
 function TherapistResults() {
@@ -81,8 +80,10 @@ function TherapistResults() {
       <PageHeader
         eyebrow="Outcomes"
         title="Session Results"
-        description="Review rehabilitation sessions completed by your patients."
+        description="Review movement-analysis summaries and patient check-ins."
       />
+
+      <p className="result-analysis-disclaimer">Movement-analysis percentages show the share of repetitions labeled correct by Aurevia. They are estimates, not clinically validated accuracy scores or a diagnosis.</p>
 
       {error && <Alert variant="error">{error}</Alert>}
 
@@ -97,6 +98,7 @@ function TherapistResults() {
           {results.map((result) => {
             const accuracy = result.result_data?.accuracy;
             const patientCheckIn = result.result_data?.patient_check_in;
+            const analysisSource = result.result_data?.analysis_source;
 
             return (
               <Card key={result.id} className="result-card">
@@ -109,16 +111,16 @@ function TherapistResults() {
                   </div>
 
                   {accuracy != null && (
-                    <StatusBadge status={accuracyTone(accuracy)}>
+                    <StatusBadge status="neutral">
                       <Percent size={11} style={{ display: 'inline', marginRight: 2 }} />
-                      {accuracy}% accuracy
+                      {accuracy}% AI-labeled correct reps
                     </StatusBadge>
                   )}
                 </div>
 
                 <div className="result-card__metrics">
                   {Object.entries(result.result_data || {})
-                    .filter(([key]) => !['feedback', 'patient_check_in'].includes(key))
+                    .filter(([key]) => !['feedback', 'patient_check_in', 'analysis_source'].includes(key))
                     .map(([key, value]) => (
                       <div key={key} className="result-metric">
                         <span className="result-metric__value">{String(value)}</span>
@@ -138,6 +140,7 @@ function TherapistResults() {
 
                 <div className="result-card__footer">
                   <span>Session #{result.session.id} · {result.session.status}</span>
+                  <span>Analysis source: {analysisSourceLabel(analysisSource)}</span>
                   <span>{new Date(result.created_at).toLocaleString()}</span>
                 </div>
 

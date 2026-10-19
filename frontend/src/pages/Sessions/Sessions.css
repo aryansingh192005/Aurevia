@@ -68,6 +68,7 @@
 .session-result > strong { color: var(--color-neutral-900); }
 .session-result__metrics { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
 .session-result__metrics b { color: var(--color-primary-700); }
+.session-result__source { display: block; margin-top: 8px; color: var(--color-neutral-500); font-size: var(--font-size-xs); }
 .session-result__checkin { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--color-neutral-200); }
 .session-result__checkin strong { color: var(--color-primary-700); }
 .session-result__checkin p { margin: 2px 0 0; line-height: 1.5; }

@@ -23,7 +23,7 @@ const METRIC_LABELS = {
   repetitions: 'Repetitions',
   correct_repetitions: 'Correct Reps',
   incorrect_repetitions: 'Incorrect Reps',
-  accuracy: 'Accuracy (%)',
+  accuracy: 'AI-labeled correct reps (%)',
 };
 
 function formatMetricLabel(name) {
@@ -124,7 +124,7 @@ function Progress() {
       <PageHeader
         eyebrow="Analytics"
         title="My Progress"
-        description="Track your rehabilitation performance over time."
+        description="Track your session consistency and movement-analysis estimates over time."
       />
 
       {error && <Alert variant="error">{error}</Alert>}
@@ -133,7 +133,7 @@ function Progress() {
         <div className="progress-insight"><span className="progress-insight__value">{completedSessions.length}</span><span className="progress-insight__label">sessions completed</span><span className="progress-insight__hint">Every session counts</span></div>
         <div className="progress-insight"><span className="progress-insight__value">{thisWeek}</span><span className="progress-insight__label">this week</span><span className="progress-insight__hint">Your weekly rhythm</span></div>
         <div className="progress-insight"><span className="progress-insight__value">{currentStreak} day{currentStreak === 1 ? '' : 's'}</span><span className="progress-insight__label">current streak</span><span className="progress-insight__hint">Rest days are part of recovery</span></div>
-        <div className="progress-insight"><span className="progress-insight__value">{accuracyChange === null ? '—' : `${accuracyChange > 0 ? '+' : ''}${accuracyChange}%`}</span><span className="progress-insight__label">accuracy change</span><span className="progress-insight__hint">Across your recorded journey</span></div>
+        <div className="progress-insight"><span className="progress-insight__value">{accuracyChange === null ? '—' : `${accuracyChange > 0 ? '+' : ''}${accuracyChange}%`}</span><span className="progress-insight__label">change in AI-labeled correct reps</span><span className="progress-insight__hint">Movement-analysis estimate, not clinical accuracy</span></div>
       </div>
 
       <div className="progress-milestones" aria-label="Consistency milestones">

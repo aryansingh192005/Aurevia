@@ -480,16 +480,26 @@ function ExerciseSession() {
               {!resultSubmitted ? (
                 <>
                   {finalResult ? (
-                    <div className="live-stats live-stats--summary">
-                      <div>
-                        <span className="live-stats__value">{finalResult.repetitions}</span>
-                        <span className="live-stats__label">Total Reps</span>
+                    <>
+                      <div className="live-stats live-stats--summary">
+                        <div>
+                          <span className="live-stats__value">{finalResult.repetitions}</span>
+                          <span className="live-stats__label">Total Reps</span>
+                        </div>
+                        <div>
+                          <span className="live-stats__value">{finalResult.accuracy}%</span>
+                          <span className="live-stats__label">AI-labeled correct reps</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="live-stats__value">{finalResult.accuracy}%</span>
-                        <span className="live-stats__label">Accuracy</span>
-                      </div>
-                    </div>
+                      <p className="session-analysis-note">
+                        {finalResult.analysis_source === 'lstm'
+                          ? 'Analysis source: LSTM model.'
+                          : finalResult.analysis_source === 'heuristic'
+                            ? 'Analysis source: pose-based estimate.'
+                            : 'Analysis source not recorded.'}{' '}
+                        This is an estimate, not a clinical measure.
+                      </p>
+                    </>
                   ) : (
                     <p className="session-panel__note">
                       No AI tracking data was captured — camera may not have been active.
