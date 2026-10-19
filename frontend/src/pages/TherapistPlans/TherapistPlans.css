@@ -8,7 +8,7 @@
 .plan-form__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .plan-form label, .plan-exercise-row label { display: grid; gap: 6px; color: var(--color-neutral-600); font-size: .85rem; font-weight: 600; }
 .plan-form input, .plan-form select, .plan-form textarea, .plan-exercise-row input, .plan-exercise-row select { width: 100%; border: 1px solid var(--color-neutral-200); border-radius: 10px; padding: 10px 12px; background: white; color: var(--color-neutral-900); font: inherit; }
-.plan-form input:focus, .plan-form select:focus, .plan-form textarea:focus, .plan-exercise-row input:focus, .plan-exercise-row select:focus { outline: 3px solid #7e14ff2b; border-color: var(--color-primary-500); }
+.plan-form input:focus, .plan-form select:focus, .plan-form textarea:focus, .plan-exercise-row input:focus, .plan-exercise-row select:focus { outline: 3px solid #71945f2b; border-color: var(--color-primary-500); }
 .plan-form__wide { grid-column: 1 / -1; }
 .plan-exercises-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .plan-exercises-heading h3 { font-size: 1rem; }

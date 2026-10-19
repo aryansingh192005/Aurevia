@@ -6,6 +6,7 @@ import {
   FileBarChart,
   ListChecks,
   Users,
+  CalendarDays,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
@@ -56,6 +57,9 @@ function TherapistDashboard() {
   }, []);
 
   const activeAssignments = assignments.filter((assignment) => assignment.status === 'active');
+  const recentResults = [...results]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
 
   if (isLoading) {
     return <Spinner label="Loading your dashboard..." fullPage />;
@@ -90,7 +94,33 @@ function TherapistDashboard() {
         />
       </div>
 
-      <div className="dashboard-grid">
+      <div className="therapist-dashboard-layout">
+        <Card className="dashboard-recent-card therapist-activity-card">
+          <div className="dashboard-section-heading">
+            <div><span className="dashboard-section-label">CARE TEAM</span><h2>Recent patient activity</h2></div>
+            <Link to="/therapist/sessions" className="dashboard-subtle-link">All results <ArrowRight size={14} /></Link>
+          </div>
+          {recentResults.length ? <div className="dashboard-activity-list">
+            {recentResults.map((result) => <div className="dashboard-activity-row" key={result.id}>
+              <span className="dashboard-activity-icon"><CalendarDays size={16} /></span>
+              <div className="dashboard-activity-main"><strong>{result.patient?.name || 'Patient'} <span className="dashboard-activity-separator">·</span> {result.exercise?.name || 'Exercise session'}</strong><span>{result.created_at ? new Date(result.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date not recorded'}</span></div>
+              <span className="dashboard-activity-status">Session #{result.session?.id ?? '—'}</span>
+            </div>)}
+          </div> : <p className="dashboard-activity-empty">Completed patient sessions and their summaries will appear here.</p>}
+        </Card>
+        <Card className="therapist-roster-card">
+          <div className="dashboard-section-heading">
+            <div><span className="dashboard-section-label">YOUR PATIENTS</span><h2>Patient list</h2></div>
+            <Link to="/therapist/patients" className="dashboard-subtle-link">View all <ArrowRight size={14} /></Link>
+          </div>
+          {patients.length ? <div className="therapist-roster-list">{patients.slice(0, 5).map((patient) => {
+            const count = activeAssignments.filter((assignment) => assignment.patient?.id === patient.id).length;
+            return <div className="therapist-roster-row" key={patient.id}><span className="therapist-roster-avatar">{patient.name?.charAt(0)?.toUpperCase() || 'P'}</span><div><strong>{patient.name}</strong><span>{count} active exercise{count === 1 ? '' : 's'}</span></div></div>;
+          })}</div> : <p className="dashboard-activity-empty">Registered patients will appear here.</p>}
+        </Card>
+      </div>
+
+      <div className="dashboard-grid dashboard-quick-links">
         <Card hoverable className="dashboard-tile">
           <Link to="/therapist/patients" className="dashboard-tile__link">
             <div className="dashboard-tile__icon dashboard-tile__icon--primary">

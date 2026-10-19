@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { AlertTriangle, Camera, Loader2, Timer } from 'lucide-react';
+import { AlertTriangle, Camera, Loader2, MessageCircle, Timer, Volume2, VolumeX } from 'lucide-react';
 
 import { RepCounter, SKELETON_EDGES, extractJointAngles } from '../../ai/poseAnalysis';
 import api from '../../services/api';
@@ -38,10 +38,50 @@ const PoseCamera = forwardRef(function PoseCamera(
   const [liveFeedback, setLiveFeedback] = useState('Loading movement analysis...');
   const [modelAvailable, setModelAvailable] = useState(null);
   const [aiPredictions, setAiPredictions] = useState([]);
+  const [voiceGuidance, setVoiceGuidance] = useState(false);
+  const voiceGuidanceRef = useRef(false);
+  const lastAnnouncedCueRef = useRef({ message: '', at: 0 });
+  const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   useEffect(() => {
     logRecordingsRef.current = logRecordings;
   }, [logRecordings]);
+
+  useEffect(() => {
+    voiceGuidanceRef.current = voiceGuidance;
+    if (!voiceGuidance) window.speechSynthesis?.cancel();
+  }, [voiceGuidance]);
+
+  useEffect(() => () => window.speechSynthesis?.cancel(), []);
+
+  function announceCue(message) {
+    if (!voiceGuidanceRef.current || !speechSupported || !message) return;
+    const now = Date.now();
+    const previous = lastAnnouncedCueRef.current;
+    if (message === previous.message || now - previous.at < 2800) return;
+
+    lastAnnouncedCueRef.current = { message, at: now };
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.volume = 0.85;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function toggleVoiceGuidance() {
+    const enabled = !voiceGuidance;
+    setVoiceGuidance(enabled);
+    if (!speechSupported) return;
+    window.speechSynthesis.cancel();
+    if (enabled) {
+      const utterance = new SpeechSynthesisUtterance(`Voice guidance is on. ${liveFeedback}`);
+      utterance.rate = 0.92;
+      utterance.volume = 0.85;
+      window.speechSynthesis.speak(utterance);
+      lastAnnouncedCueRef.current = { message: liveFeedback, at: Date.now() };
+    }
+  }
 
   // Saving a training recording is opt-in. Live LSTM inference remains
   // available regardless of that choice.
@@ -202,6 +242,7 @@ const PoseCamera = forwardRef(function PoseCamera(
         latestUpdateRef.current = update;
 
         setLiveFeedback(update.feedback);
+        announceCue(update.feedback);
         const predictions = predictionTrackerRef.current.results;
         onUpdate?.({
           ...update,
@@ -210,7 +251,9 @@ const PoseCamera = forwardRef(function PoseCamera(
           aiIncorrectReps: predictions.filter((item) => item.label === 'incorrect').length,
         });
       } else {
-        setLiveFeedback('Step back so your full body is visible.');
+        const cue = 'Step back so your full body is visible.';
+        setLiveFeedback(cue);
+        announceCue(cue);
       }
 
       rafRef.current = requestAnimationFrame(detectLoop);
@@ -319,7 +362,25 @@ const PoseCamera = forwardRef(function PoseCamera(
 
       {status === 'ready' && active && (
         <>
-          <div className="pose-camera__feedback" role="status" aria-live="polite">{liveFeedback}</div>
+          <section className="exercise-coach" aria-label="Aurevia exercise guide">
+            <div className="exercise-coach__icon" aria-hidden="true"><MessageCircle size={18} /></div>
+            <div className="exercise-coach__message" role="status" aria-live="polite">
+              <strong>Aurevia exercise guide</strong>
+              <span>{liveFeedback}</span>
+            </div>
+            <button
+              type="button"
+              className={`exercise-coach__voice ${voiceGuidance ? 'is-on' : ''}`}
+              onClick={toggleVoiceGuidance}
+              disabled={!speechSupported}
+              aria-pressed={voiceGuidance}
+              title={speechSupported ? `${voiceGuidance ? 'Turn off' : 'Turn on'} spoken exercise cues` : 'Spoken cues are not supported in this browser'}
+            >
+              {voiceGuidance ? <Volume2 size={16} /> : <VolumeX size={16} />}
+              <span>{speechSupported ? `Voice ${voiceGuidance ? 'on' : 'off'}` : 'Voice unavailable'}</span>
+            </button>
+          </section>
+          <p className="exercise-coach__disclosure">Movement cues are estimates from camera tracking. Follow your therapist’s instructions and stop if you feel pain or unwell.</p>
           <div className="pose-camera__feedback" role="status" aria-live="polite">
             {modelAvailable === false && 'Trained LSTM is unavailable; pose-based movement estimates are being used.'}
             {modelAvailable === null && 'LSTM status could not be confirmed; pose-based movement estimates are being used.'}

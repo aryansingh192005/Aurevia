@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   NavLink,
   Outlet,
@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MoveUpRight,
   Users,
   X,
 } from 'lucide-react';
@@ -45,13 +46,6 @@ const THERAPIST_LINKS = [
 function AppLayout() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [largeText, setLargeText] = useState(() => localStorage.getItem('aurevia.largeText') === 'true');
-
-  useEffect(() => {
-    document.documentElement.style.fontSize = largeText ? '112.5%' : '';
-    localStorage.setItem('aurevia.largeText', String(largeText));
-  }, [largeText]);
-
   const {
     user,
     isAuthenticated,
@@ -69,91 +63,92 @@ function AppLayout() {
     : [];
 
   return (
-    <div className="app-layout">
-      <header className="app-header">
-        <NavLink to="/" className="brand" onClick={() => setMenuOpen(false)}>
-          <span className="brand-mark">A</span>
-          <span className="brand-text">
-            <span className="brand-name">Aurevia</span>
-            <span className="brand-tagline">AI-Powered Rehabilitation</span>
-          </span>
-        </NavLink>
-
-        <button
-          type="button"
-          className="menu-toggle"
-          aria-label="Toggle navigation"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-
-        <nav
-          className={`main-navigation ${menuOpen ? 'main-navigation--open' : ''}`}
-          aria-label="Main navigation"
-        >
-          {!isAuthenticated && (
-            <>
-              <NavLink to="/" end onClick={() => setMenuOpen(false)}>
-                Home
-              </NavLink>
-
-              <NavLink to="/login" onClick={() => setMenuOpen(false)}>
-                Login
-              </NavLink>
-
-              <NavLink to="/register" className="nav-cta" onClick={() => setMenuOpen(false)}>
-                Get Started
-              </NavLink>
-            </>
-          )}
-
-          {isAuthenticated &&
-            links.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} to={to} onClick={() => setMenuOpen(false)}>
-                <Icon size={16} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-
-          {isAuthenticated && (
-            <button
-              type="button"
-              className="accessibility-toggle"
-              aria-pressed={largeText}
-              onClick={() => setLargeText((value) => !value)}
-              title="Adjust text size"
-            >
-              <Accessibility size={16} /> <span>{largeText ? 'Text: large' : 'Text size'}</span>
-            </button>
-          )}
-
-          {isAuthenticated && (
-            <div className="nav-user">
-              <span className="nav-user__avatar">
-                {user?.name?.charAt(0)?.toUpperCase() || '?'}
+    <div className={`app-layout ${isAuthenticated ? 'app-layout--workspace' : 'app-layout--public'}`}>
+      {isAuthenticated ? (
+        <>
+          <button
+            type="button"
+            className={`sidebar-scrim ${menuOpen ? 'sidebar-scrim--visible' : ''}`}
+            aria-label="Close navigation"
+            onClick={() => setMenuOpen(false)}
+          />
+          <aside className={`workspace-sidebar ${menuOpen ? 'workspace-sidebar--open' : ''}`}>
+            <NavLink to="/" className="brand" onClick={() => setMenuOpen(false)}>
+              <span className="brand-mark"><Activity size={21} strokeWidth={2.5} /></span>
+              <span className="brand-text">
+                <span className="brand-name">aurevia<span>.</span></span>
+                <span className="brand-tagline">MOVE TOWARD BETTER</span>
               </span>
-              <span className="nav-user__info">
-                <span className="nav-user__name">{user?.name}</span>
-                <span className="nav-user__role">{user?.role}</span>
-              </span>
-
+            </NavLink>
+            <div className="sidebar-section-label">WORKSPACE</div>
+            <nav className="main-navigation" aria-label="Main navigation">
+              {links.map(({ to, label, icon: Icon }) => (
+                <NavLink key={to} to={to} onClick={() => setMenuOpen(false)}>
+                  <Icon size={18} strokeWidth={1.8} />
+                  <span>{label}</span>
+                  {label === 'Dashboard' && <MoveUpRight className="nav-link-arrow" size={14} />}
+                </NavLink>
+              ))}
+            </nav>
+            <div className="sidebar-note">
+              <span className="sidebar-note__icon"><Activity size={16} /></span>
+              <div><strong>Small steps count.</strong><span>Your progress is built one session at a time.</span></div>
+            </div>
+            <div className="sidebar-bottom">
+              <div className="nav-user">
+                <span className="nav-user__avatar">{user?.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                <span className="nav-user__info">
+                  <span className="nav-user__name">{user?.name}</span>
+                  <span className="nav-user__role">{user?.role}</span>
+                </span>
+                <button type="button" className="logout-button" onClick={handleLogout} title="Sign out">
+                  <LogOut size={16} /> <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+          <div className="workspace-main">
+            <header className="workspace-topbar">
               <button
                 type="button"
-                className="logout-button"
-                onClick={handleLogout}
-                aria-label="Log out"
+                className="menu-toggle"
+                aria-label="Toggle navigation"
+                onClick={() => setMenuOpen((open) => !open)}
               >
-                <LogOut size={16} />
+                {menuOpen ? <X size={21} /> : <Menu size={21} />}
               </button>
-            </div>
-          )}
-        </nav>
-      </header>
-
-      <main className="app-content">
-        <Outlet />
-      </main>
+              <div className="topbar-context"><span className="topbar-context__dot" /> Your rehabilitation space</div>
+              <div className="topbar-user">
+                <span className="topbar-user__name">{user?.name}</span>
+                <span className="nav-user__avatar">{user?.name?.charAt(0)?.toUpperCase() || '?'}</span>
+                <button type="button" className="topbar-signout" onClick={handleLogout}>
+                  <LogOut size={15} /><span>Sign out</span>
+                </button>
+              </div>
+            </header>
+            <main className="app-content"><Outlet /></main>
+            <footer className="workspace-footer"><span>© {new Date().getFullYear()} Aurevia</span><span>Progress, at your pace.</span></footer>
+          </div>
+        </>
+      ) : (
+        <>
+          <header className="app-header">
+            <NavLink to="/" className="brand" onClick={() => setMenuOpen(false)}>
+              <span className="brand-mark"><Activity size={21} strokeWidth={2.5} /></span>
+              <span className="brand-text"><span className="brand-name">aurevia<span>.</span></span><span className="brand-tagline">MOVE TOWARD BETTER</span></span>
+            </NavLink>
+            <button type="button" className="menu-toggle" aria-label="Toggle navigation" onClick={() => setMenuOpen((open) => !open)}>
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+            <nav className={`main-navigation ${menuOpen ? 'main-navigation--open' : ''}`} aria-label="Main navigation">
+              <NavLink to="/" end onClick={() => setMenuOpen(false)}>Home</NavLink>
+              <NavLink to="/login" onClick={() => setMenuOpen(false)}>Sign in</NavLink>
+              <NavLink to="/register" className="nav-cta" onClick={() => setMenuOpen(false)}>Get started <MoveUpRight size={15} /></NavLink>
+            </nav>
+          </header>
+          <main className="app-content"><Outlet /></main>
+        </>
+      )}
     </div>
   );
 }

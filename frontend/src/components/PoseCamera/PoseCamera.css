@@ -73,3 +73,84 @@
   font-weight: var(--font-weight-semibold);
   text-align: center;
 }
+
+.exercise-coach {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dfe8d8;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #f3f7ee, #fbfcf9);
+}
+
+.exercise-coach__icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 11px;
+  color: #456b4b;
+  background: #e4eddb;
+}
+
+.exercise-coach__message {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.exercise-coach__message strong {
+  color: #526c51;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.exercise-coach__message span {
+  color: #304839;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.exercise-coach__voice {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid #dce5d6;
+  border-radius: 9px;
+  color: #506655;
+  background: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.exercise-coach__voice:hover:not(:disabled) { border-color: #b9cdb0; background: #f8faf5; }
+.exercise-coach__voice.is-on { border-color: #9db892; color: #315c3c; background: #edf4e8; }
+.exercise-coach__voice:disabled { color: #87918a; background: #f4f5f3; cursor: not-allowed; }
+.exercise-coach__voice:focus-visible { outline: 3px solid #aeca8d; outline-offset: 2px; }
+
+.exercise-coach__disclosure {
+  margin: -4px 2px 0;
+  color: #7b887f;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+@media (max-width: 520px) {
+  .exercise-coach { flex-wrap: wrap; gap: 9px; padding: 12px; }
+  .exercise-coach__message { flex-basis: calc(100% - 50px); }
+  .exercise-coach__voice { margin-left: 47px; }
+  .exercise-coach__disclosure { margin-left: 3px; font-size: 10px; }
+}
+

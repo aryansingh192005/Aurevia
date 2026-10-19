@@ -169,22 +169,22 @@ function Progress() {
 
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={points} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e4defa" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6f6489' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#6f6489' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e9e1" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#748178' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#748178' }} />
                   <Tooltip
                     contentStyle={{
                       borderRadius: 10,
-                      border: '1px solid #e4defa',
+                      border: '1px solid #e1e5dc',
                       fontSize: 12,
                     }}
                   />
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#7e14ff"
+                    stroke="#71945f"
                     strokeWidth={2.5}
-                    dot={{ r: 3, fill: '#7e14ff' }}
+                    dot={{ r: 3, fill: '#71945f', strokeWidth: 1, stroke: '#fff' }}
                     activeDot={{ r: 5 }}
                   />
                 </LineChart>

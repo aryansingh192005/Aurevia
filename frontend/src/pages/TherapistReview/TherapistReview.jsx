@@ -147,13 +147,13 @@ function TherapistReview() {
               <ResponsiveContainer width="100%" height={110}>
                 <LineChart data={toChartData(recording.sequence)} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
                   <XAxis dataKey="frame" tick={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#6f6489' }} width={30} />
-                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 10, fill: '#748178' }} width={30} />
+                  <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e1e5dc', fontSize: 11 }} />
                   <Line
                     type="monotone"
                     dataKey="angle"
-                    stroke="#7e14ff"
-                    strokeWidth={2}
+                    stroke="#71945f"
+                    strokeWidth={2.5}
                     dot={false}
                   />
                 </LineChart>

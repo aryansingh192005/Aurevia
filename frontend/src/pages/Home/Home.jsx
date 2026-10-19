@@ -1,12 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
   Activity,
   ArrowRight,
   BarChart3,
   Camera,
   ClipboardCheck,
+  MoveUpRight,
   ShieldCheck,
-  Sparkles,
   Users,
 } from 'lucide-react';
 
@@ -19,13 +19,13 @@ const FEATURES = [
     icon: Camera,
     title: 'AI Motion Tracking',
     description:
-      'Real-time pose estimation reads joint angles through your camera and understands how you move, rep by rep.',
+      'Real-time pose tracking measures key joint angles through your camera while you move, rep by rep.',
   },
   {
     icon: Activity,
     title: 'Live Form Feedback',
     description:
-      'Instant, judgment-free cues help you correct form in the moment instead of finding out at your next appointment.',
+      'Supportive movement cues help you stay aware of your form as you work through each exercise.',
   },
   {
     icon: BarChart3,
@@ -37,7 +37,7 @@ const FEATURES = [
     icon: ClipboardCheck,
     title: 'Therapist-Guided Plans',
     description:
-      'Licensed therapists assign and adjust your exact exercise program, sets, and reps — the AI just keeps you honest.',
+      'Your therapist can set your exercises, targets, and instructions while you focus on moving comfortably.',
   },
 ];
 
@@ -69,27 +69,27 @@ function Home() {
 
   const primaryCtaLabel = isAuthenticated ? 'Go to Dashboard' : 'Start Your Recovery';
 
+  if (isAuthenticated) {
+    return <Navigate to={primaryCtaTo} replace />;
+  }
+
   return (
     <div className="home-page">
       <section className="hero">
-        <div className="hero__glow" aria-hidden="true" />
-
         <div className="hero__content animate-in">
           <span className="hero__badge">
-            <Sparkles size={14} />
-            Global AI Hackathon 2025 — Winning Build
+            <span className="hero__badge-dot" />
+            THERAPY THAT MEETS YOU AT HOME
           </span>
 
           <h1>
-            Rehabilitation that
-            <span className="text-gradient-light"> watches your form</span>,
-            not just your reps.
+            Your recovery,
+            <span className="text-gradient-light"> in motion.</span>
           </h1>
 
           <p>
-            Aurevia pairs licensed therapist programs with real-time AI pose
-            analysis, so every squat, stretch, and rep gets measured — turning
-            physical therapy into something you can actually see progress in.
+            A more connected way to keep up with your rehabilitation. Follow your
+            therapist’s plan, move at your own pace, and see each session add up.
           </p>
 
           <div className="hero__actions">
@@ -100,15 +100,41 @@ function Home() {
 
             {!isAuthenticated && (
               <Link to="/login" className="hero__cta-secondary">
-                I already have an account
+                I already have an account <MoveUpRight size={15} />
               </Link>
             )}
           </div>
 
           <div className="hero__trust">
             <ShieldCheck size={16} />
-            <span>Built for patients and licensed therapists, together.</span>
+            <span>Therapist-guided. Designed around your progress.</span>
           </div>
+        </div>
+
+        <div className="hero-visual" role="img" aria-label="Illustration of Aurevia exercise tracking">
+          <div className="hero-visual__orb hero-visual__orb--one" />
+          <div className="hero-visual__orb hero-visual__orb--two" />
+          <div className="motion-lines" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+          <div className="session-preview">
+            <div className="session-preview__top"><span><Activity size={16} /> EXAMPLE SESSION</span><span className="session-preview__signal">Movement summary</span></div>
+            <div className="session-preview__body">
+              <div className="session-preview__figure" aria-hidden="true">
+                <span className="figure-halo" />
+                <span className="figure-head" />
+                <span className="figure-torso" />
+                <span className="figure-arm figure-arm--left" />
+                <span className="figure-arm figure-arm--right" />
+                <span className="figure-leg figure-leg--left" />
+                <span className="figure-leg figure-leg--right" />
+                <span className="figure-joint joint--shoulder" /><span className="figure-joint joint--elbow" />
+                <span className="figure-joint joint--hip" /><span className="figure-joint joint--knee" />
+              </div>
+              <div className="session-preview__metric"><span>THIS SESSION</span><strong>08 <small>/ 12 reps</small></strong><div className="preview-progress"><i /></div><p>Easy does it. You’re doing great.</p></div>
+            </div>
+            <div className="session-preview__bottom"><span>Sample feedback</span><span>Illustrative preview</span></div>
+          </div>
+          <div className="floating-note"><span><BarChart3 size={17} /></span><div><strong>Every session counts</strong><small>Progress you can look back on</small></div></div>
+          <div className="hero-visual__caption">MOVE WITH CONFIDENCE <span>✳</span> GROW AT YOUR PACE</div>
         </div>
       </section>
 
@@ -117,8 +143,8 @@ function Home() {
           <span className="section-heading__eyebrow">Why Aurevia</span>
           <h2>Recovery, made measurable</h2>
           <p>
-            Traditional rehab relies on memory and self-reporting. Aurevia
-            replaces guesswork with a camera, an AI model, and real numbers.
+            Keep your plan, movement feedback, and session history together in one
+            thoughtful space built to support the work you’re already doing.
           </p>
         </div>
 
@@ -138,7 +164,7 @@ function Home() {
       <section className="section-steps">
         <div className="section-heading">
           <span className="section-heading__eyebrow">How it works</span>
-          <h2>From prescription to progress in four steps</h2>
+          <h2>A little structure goes a long way</h2>
         </div>
 
         <div className="steps-grid">
@@ -155,7 +181,7 @@ function Home() {
       <section className="section-cta">
         <div className="cta-panel">
           <Users size={28} />
-          <h2>Patients and therapists, on the same page</h2>
+          <h2>Progress feels better when it’s shared</h2>
           <p>
             Create your free account to start assigning exercises, tracking
             sessions, or beginning your own rehabilitation journey today.

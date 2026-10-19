@@ -8,6 +8,7 @@ import {
   Dumbbell,
   History,
   ListChecks,
+  CalendarDays,
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
@@ -68,6 +69,9 @@ function PatientDashboard() {
 
   const activeAssignments = assignments.filter((assignment) => assignment.status === 'active');
   const completedSessions = sessions.filter((session) => session.status === 'completed');
+  const recentSessions = [...sessions]
+    .sort((a, b) => new Date(b.completed_at || b.started_at || b.created_at) - new Date(a.completed_at || a.started_at || a.created_at))
+    .slice(0, 4);
   const nextAssignment = activeAssignments[0];
   const resumableSession = nextAssignment
     ? sessions.find((session) => (
@@ -114,7 +118,44 @@ function PatientDashboard() {
         />
       </div>
 
-      <div className="dashboard-grid">
+      <div className="patient-dashboard-layout">
+        <Card className="dashboard-next-card">
+          <div className="dashboard-next-card__content">
+            <span className="dashboard-section-label">YOUR PLAN</span>
+            <h2>{resumableSession ? 'Pick up where you left off' : nextAssignment ? 'Your next exercise' : 'Your plan is ready when you are'}</h2>
+            <p>{resumableSession
+              ? `Continue your ${nextAssignment.exercise.name} session. Your progress so far is saved.`
+              : nextAssignment
+                ? `Your therapist has assigned ${nextAssignment.exercise.name}. Take it at a comfortable pace.`
+                : 'When your therapist assigns an exercise, it will appear here with everything you need to begin.'}</p>
+            {nextAssignment && <div className="dashboard-plan-meta">
+              {nextAssignment.target_sets && <span>{nextAssignment.target_sets} sets</span>}
+              {nextAssignment.target_reps && <span>{nextAssignment.target_reps} reps per set</span>}
+              {nextAssignment.exercise?.target_area && <span>{nextAssignment.exercise.target_area}</span>}
+            </div>}
+            <Link to={nextAssignment ? nextExercisePath : '/patient/exercises'} className="dashboard-primary-link">
+              {resumableSession ? 'Resume session' : nextAssignment ? 'View exercise' : 'View my exercises'} <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="dashboard-next-card__aside" aria-hidden="true"><Dumbbell size={27} /><span>{activeAssignments.length} active</span></div>
+        </Card>
+
+        <Card className="dashboard-recent-card">
+          <div className="dashboard-section-heading">
+            <div><span className="dashboard-section-label">YOUR ACTIVITY</span><h2>Recent sessions</h2></div>
+            <Link to="/sessions" className="dashboard-subtle-link">View history <ArrowRight size={14} /></Link>
+          </div>
+          {recentSessions.length ? <div className="dashboard-activity-list">
+            {recentSessions.map((session) => <div className="dashboard-activity-row" key={session.id}>
+              <span className="dashboard-activity-icon"><CalendarDays size={16} /></span>
+              <div className="dashboard-activity-main"><strong>{session.exercise?.name || 'Exercise session'}</strong><span>{session.completed_at || session.started_at ? new Date(session.completed_at || session.started_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date not recorded'}</span></div>
+              <span className={`dashboard-activity-status ${session.status === 'completed' ? 'is-complete' : ''}`}>{session.status === 'completed' ? 'Completed' : session.status.replace('_', ' ')}</span>
+            </div>)}
+          </div> : <p className="dashboard-activity-empty">Your sessions will appear here after you begin an exercise.</p>}
+        </Card>
+      </div>
+
+      <div className="dashboard-grid dashboard-quick-links">
         <Card hoverable className="dashboard-tile">
           <Link to="/patient/exercises" className="dashboard-tile__link">
             <div className="dashboard-tile__icon dashboard-tile__icon--primary">
@@ -124,25 +165,6 @@ function PatientDashboard() {
             <p>View exercises assigned by your therapist.</p>
             <span className="dashboard-tile__cta">
               View Exercises <ArrowRight size={15} />
-            </span>
-          </Link>
-        </Card>
-
-        <Card hoverable className="dashboard-tile">
-          <Link to={nextExercisePath} className="dashboard-tile__link">
-            <div className="dashboard-tile__icon dashboard-tile__icon--energy">
-              <Dumbbell size={22} />
-            </div>
-            <h2>{resumableSession ? 'Resume Your Session' : nextAssignment ? 'Your Next Exercise' : 'Explore Your Exercises'}</h2>
-            <p>
-              {resumableSession
-                ? `Continue ${nextAssignment.exercise.name}${nextAssignment.target_sets ? ` · ${nextAssignment.target_sets} sets` : ''}${nextAssignment.target_reps ? ` · ${nextAssignment.target_reps} reps per set` : ''}.`
-                : nextAssignment
-                  ? `Start ${nextAssignment.exercise.name}${nextAssignment.target_sets ? ` · ${nextAssignment.target_sets} sets` : ''}${nextAssignment.target_reps ? ` · ${nextAssignment.target_reps} reps per set` : ''}.`
-                  : 'View exercises assigned by your therapist and start when you are ready.'}
-            </p>
-            <span className="dashboard-tile__cta">
-              {resumableSession ? 'Resume Session' : nextAssignment ? 'Start Exercise' : 'View Exercises'} <ArrowRight size={15} />
             </span>
           </Link>
         </Card>
