@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db
 from app.models import (
@@ -57,7 +58,7 @@ def session_to_dict(session, include_result=False):
     }
 
     if include_result:
-        result = next(iter(session.results), None)
+        result = session.results
         session_data["result"] = (
             {
                 "result_data": result.result_data,
@@ -515,7 +516,13 @@ def create_session_result(user, session_id):
                 )
             )
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        if SessionResult.query.filter_by(session_id=session_id).first() is not None:
+            return jsonify({"error": "A result has already been submitted for this session"}), 409
+        raise
 
     return jsonify(
         {

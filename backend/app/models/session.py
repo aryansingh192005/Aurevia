@@ -76,6 +76,7 @@ class RehabilitationSession(db.Model):
         "SessionResult",
         back_populates="session",
         cascade="all, delete-orphan",
+        uselist=False,
     )
 
     progress_records = db.relationship(

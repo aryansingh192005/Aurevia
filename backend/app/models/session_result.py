@@ -5,6 +5,9 @@ from app.extensions import db
 
 class SessionResult(db.Model):
     __tablename__ = "session_results"
+    __table_args__ = (
+        db.UniqueConstraint("session_id", name="uq_session_results_session_id"),
+    )
 
     id = db.Column(
         db.Integer,
@@ -15,7 +18,6 @@ class SessionResult(db.Model):
         db.Integer,
         db.ForeignKey("rehabilitation_sessions.id"),
         nullable=False,
-        index=True,
     )
 
     result_type = db.Column(
