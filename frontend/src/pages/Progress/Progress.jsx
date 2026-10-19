@@ -32,6 +32,7 @@ function formatMetricLabel(name) {
 
 function Progress() {
   const [progress, setProgress] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -40,11 +41,12 @@ function Progress() {
 
     async function loadProgress() {
       try {
-        const response = await api.get('/progress');
+        const [response, sessionResponse] = await Promise.all([api.get('/progress'), api.get('/sessions')]);
 
         if (!isMounted) return;
 
         setProgress(response.data.progress || []);
+        setSessions(sessionResponse.data.sessions || []);
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -60,6 +62,19 @@ function Progress() {
       isMounted = false;
     };
   }, []);
+
+  const completedSessions = sessions.filter((session) => session.status === 'completed');
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  const thisWeek = completedSessions.filter((session) => session.completed_at && new Date(session.completed_at) >= weekStart).length;
+  const daySet = new Set(completedSessions.filter((session) => session.completed_at).map((session) => new Date(session.completed_at).toLocaleDateString()));
+  let currentStreak = 0;
+  const streakDay = new Date();
+  if (!daySet.has(streakDay.toLocaleDateString())) streakDay.setDate(streakDay.getDate() - 1);
+  while (daySet.has(streakDay.toLocaleDateString())) { currentStreak += 1; streakDay.setDate(streakDay.getDate() - 1); }
+  const accuracyRecords = [...progress].filter((record) => record.metric_name === 'accuracy').sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+  const accuracyChange = accuracyRecords.length >= 2 ? Math.round(accuracyRecords[accuracyRecords.length - 1].metric_value - accuracyRecords[0].metric_value) : null;
 
   const grouped = useMemo(() => {
     const byMetric = {};
@@ -97,11 +112,23 @@ function Progress() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
+      <div className="progress-insights" aria-label="Progress highlights">
+        <div className="progress-insight"><span className="progress-insight__value">{completedSessions.length}</span><span className="progress-insight__label">sessions completed</span><span className="progress-insight__hint">Every session counts</span></div>
+        <div className="progress-insight"><span className="progress-insight__value">{thisWeek}</span><span className="progress-insight__label">this week</span><span className="progress-insight__hint">Your weekly rhythm</span></div>
+        <div className="progress-insight"><span className="progress-insight__value">{currentStreak} day{currentStreak === 1 ? '' : 's'}</span><span className="progress-insight__label">current streak</span><span className="progress-insight__hint">Rest days are part of recovery</span></div>
+        <div className="progress-insight"><span className="progress-insight__value">{accuracyChange === null ? '—' : `${accuracyChange > 0 ? '+' : ''}${accuracyChange}%`}</span><span className="progress-insight__label">accuracy change</span><span className="progress-insight__hint">Across your recorded journey</span></div>
+      </div>
+
+      <div className="progress-milestones" aria-label="Consistency milestones">
+        <span>Milestones</span>
+        {[1, 5, 10, 25].map((milestone) => <span key={milestone} className={completedSessions.length >= milestone ? 'progress-milestone is-earned' : 'progress-milestone'}>{completedSessions.length >= milestone ? '✓ ' : ''}{milestone} sessions</span>)}
+      </div>
+
       {progress.length === 0 && !error ? (
         <EmptyState
           icon={<BarChart3 size={28} />}
           title="No progress data yet"
-          description="Complete a rehabilitation session to start building your progress history."
+          description="Complete a session to start building your progress history. Your highlights above celebrate consistency, not perfection."
         />
       ) : (
         <div className="progress-grid">

@@ -80,3 +80,11 @@
   color: var(--color-neutral-400);
   font-size: var(--font-size-xs);
 }
+.result-therapist-feedback { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-neutral-100); }
+.result-therapist-feedback > strong { color: var(--color-neutral-800); font-size: .87rem; }
+.result-therapist-feedback textarea { width: 100%; resize: vertical; border: 1px solid var(--color-neutral-200); border-radius: 10px; padding: 10px 12px; font: inherit; color: var(--color-neutral-800); }
+.result-therapist-feedback textarea:focus { outline: 3px solid #7e14ff2b; border-color: var(--color-primary-500); }
+.result-therapist-feedback__note { margin: 0; padding: 10px 12px; border-left: 3px solid var(--color-primary-400); border-radius: 0 8px 8px 0; background: var(--color-primary-50); color: var(--color-neutral-700); white-space: pre-wrap; }
+.result-therapist-feedback__note small { display: block; margin-top: 5px; color: var(--color-neutral-500); }
+.result-feedback-submit { justify-self: start; border: 0; border-radius: 9px; background: var(--color-primary-600); color: white; padding: 9px 13px; font: inherit; font-size: .82rem; font-weight: 650; cursor: pointer; }
+.result-feedback-submit:disabled { opacity: .55; cursor: not-allowed; }

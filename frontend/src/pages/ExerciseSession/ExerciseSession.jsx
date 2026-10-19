@@ -42,7 +42,11 @@ function ExerciseSession() {
   const [isSubmittingResult, setIsSubmittingResult] = useState(false);
 
   const [resultSubmitted, setResultSubmitted] = useState(false);
-  const [saveMovementData, setSaveMovementData] = useState(false);
+  const [trainingConsent, setTrainingConsent] = useState(false);
+  const [startCountdown, setStartCountdown] = useState(null);
+  const [completedSets, setCompletedSets] = useState(0);
+  const [resting, setResting] = useState(false);
+  const [restRemaining, setRestRemaining] = useState(0);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -103,8 +107,14 @@ function ExerciseSession() {
     setError('');
 
     try {
+      for (let count = 3; count > 0; count -= 1) {
+        setStartCountdown(count);
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+      }
+      setStartCountdown(null);
       const response = await api.patch(`/sessions/${session.id}`, {
         status: 'started',
+        movement_recording_consent: trainingConsent,
       });
 
       setSession(response.data.session);
@@ -114,18 +124,49 @@ function ExerciseSession() {
           'Unable to start rehabilitation session.',
       );
     } finally {
+      setStartCountdown(null);
       setIsStarting(false);
     }
   }
 
+  function handleLiveUpdate(stats) {
+    setLiveStats(stats);
+    if (!session || session.status !== 'started' || resting) return;
+    const targetReps = Math.max(1, assignment?.target_reps || 10);
+    const targetSets = Math.max(1, assignment?.target_sets || 1);
+    const setCount = Math.min(targetSets, Math.floor((stats.reps || 0) / targetReps));
+    if (setCount > completedSets) {
+      setCompletedSets(setCount);
+      if (setCount < targetSets && assignment?.rest_seconds > 0) {
+        setRestRemaining(assignment.rest_seconds);
+        setResting(true);
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!resting) return undefined;
+    const timer = window.setTimeout(() => {
+      if (restRemaining <= 1) {
+        setRestRemaining(0);
+        setResting(false);
+      } else {
+        setRestRemaining(restRemaining - 1);
+      }
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [resting, restRemaining]);
+
   async function completeSession() {
     if (!session) return;
 
+    setResting(false);
+    setRestRemaining(0);
     setIsCompleting(true);
     setError('');
 
     // Capture the AI-tracked summary the moment the patient finishes,
-    // including any pending per-repetition LSTM predictions.
+    // including any in-flight per-repetition model predictions.
     const summary = await poseCameraRef.current?.getSummary();
     if (summary) {
       setFinalResult(summary);
@@ -144,6 +185,18 @@ function ExerciseSession() {
       );
     } finally {
       setIsCompleting(false);
+    }
+  }
+
+  async function withdrawRecordingConsent() {
+    try {
+      await api.patch(`/sessions/${session.id}`, {
+        status: 'started',
+        movement_recording_consent: false,
+      });
+      setTrainingConsent(false);
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Unable to update your recording preference.');
     }
   }
 
@@ -200,6 +253,11 @@ function ExerciseSession() {
   const exercise = assignment.exercise;
   const activeStep = session ? stepIndex(session.status) : -1;
   const isLive = Boolean(session && session.status === 'started');
+  const targetSetCount = Math.max(1, assignment.target_sets || 1);
+  const targetRepCount = Math.max(1, assignment.target_reps || 10);
+  const repsInSet = resting || completedSets >= targetSetCount
+    ? targetRepCount
+    : (liveStats?.reps || 0) % targetRepCount;
 
   return (
     <div className="exercise-session">
@@ -209,13 +267,14 @@ function ExerciseSession() {
 
       <div className="session-hero">
         <h1>{exercise.name}</h1>
-        <p>Your rehabilitation exercise session.</p>
+        <p>Your rehabilitation exercise session. AI feedback supports movement practice; it does not diagnose or replace your therapist.</p>
       </div>
 
       <div className="session-layout">
         <Card className="session-details">
           <h2>Exercise Details</h2>
           <p className="session-details__description">{exercise.description}</p>
+          {assignment.instructions && <div className="session-plan-cue"><strong>Your therapist’s cue</strong><p>{assignment.instructions}</p></div>}
 
           <div className="session-details__meta">
             <div>
@@ -253,10 +312,11 @@ function ExerciseSession() {
               <PoseCamera
                 ref={poseCameraRef}
                 targetArea={exercise.target_area}
-                active={isLive && !isCompleting}
-                onUpdate={setLiveStats}
+                active={isLive && !isCompleting && !resting}
+                onUpdate={handleLiveUpdate}
                 sessionId={session.id}
-                logRecordings={saveMovementData}
+                logRecordings={trainingConsent}
+                paused={resting}
               />
             </div>
           )}
@@ -302,25 +362,22 @@ function ExerciseSession() {
                 Session <strong>#{session.id}</strong> is ready. Position yourself in front of
                 your camera, full body visible, then begin when set.
               </p>
-              <p className="session-panel__disclosure">
-                Your camera video is processed in this browser and is not uploaded. Each
-                completed repetition sends joint-angle measurements to Aurevia for live AI
-                feedback. Those measurements are linked to this session.
-              </p>
               <label className="session-consent">
                 <input
                   type="checkbox"
-                  checked={saveMovementData}
-                  onChange={(event) => setSaveMovementData(event.target.checked)}
+                  checked={trainingConsent}
+                  onChange={(event) => setTrainingConsent(event.target.checked)}
                 />
                 <span>
-                  Also save my joint-angle repetitions and automatic labels for therapist
-                  review and possible model improvement. I can use the live session without
-                  selecting this option.
+                  <strong>Help improve Aurevia (optional)</strong>
+                  <small>
+                     Save joint-angle repetitions linked to this session for therapist review and possible AI improvements.
+                    Your camera video stays on this device. Live prediction still works if you leave this unchecked.
+                  </small>
                 </span>
               </label>
               <Button onClick={beginRehabilitation} loading={isStarting} icon={<PlayCircle size={16} />}>
-                Begin Rehabilitation
+                {startCountdown ? `Get ready · ${startCountdown}` : 'Begin Rehabilitation'}
               </Button>
             </div>
           )}
@@ -337,12 +394,18 @@ function ExerciseSession() {
                 reps automatically.
               </p>
 
+              <div className="session-set-progress" role="status" aria-live="polite">
+                <strong>Set {Math.min(completedSets + 1, targetSetCount)} of {targetSetCount}</strong>
+                <span>{repsInSet} of {targetRepCount} reps this set</span>
+              </div>
+
+              {resting && <div className="session-rest-card" role="status" aria-live="assertive"><Timer size={20} /><div><strong>Rest and reset</strong><span>Next set in {restRemaining} seconds. Take a comfortable breath.</span></div></div>}
+
               <p className="session-panel__disclosure">
-                Camera video stays in your browser. Joint-angle sequences are sent to the
-                backend for live LSTM prediction. {saveMovementData
-                  ? 'You opted in to storing these sequences with this session for therapist review and possible model improvement.'
-                  : 'Your repetitions are not stored as training recordings.'}
+                Your camera video is processed on this device. Joint angles are sent to Aurevia for live exercise analysis.
+                {trainingConsent ? ' You opted in to saving joint-angle repetitions linked to this session for therapist review and possible AI improvement.' : ' Repetitions are not saved for AI training.'}
               </p>
+              {trainingConsent && <button type="button" className="session-consent-withdraw" onClick={withdrawRecordingConsent}>Stop saving repetitions for AI improvement</button>}
 
               {liveStats && (
                 <div className="live-stats">

@@ -273,3 +273,15 @@
     grid-template-columns: 1fr;
   }
 }
+.session-consent { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; padding: 14px; border: 1px solid var(--color-neutral-200); border-radius: 12px; background: var(--color-neutral-50); cursor: pointer; }
+.session-consent input { margin-top: 3px; accent-color: var(--color-primary-600); }
+.session-consent strong, .session-consent small { display: block; }
+.session-consent small { margin-top: 5px; color: var(--color-neutral-600); line-height: 1.5; }
+.session-consent-withdraw { padding: 0; border: 0; background: transparent; color: var(--color-primary-700); font: inherit; font-size: .82rem; font-weight: 650; text-decoration: underline; cursor: pointer; }
+.session-plan-cue { margin: 14px 0; padding: 13px 15px; border-left: 3px solid var(--color-primary-500); border-radius: 0 10px 10px 0; background: var(--color-primary-50); color: var(--color-neutral-700); }
+.session-plan-cue p { margin: 5px 0 0; line-height: 1.5; }
+.session-set-progress { display: flex; justify-content: space-between; gap: 8px; margin: 12px 0; padding: 12px 14px; border-radius: 12px; background: var(--color-neutral-50); color: var(--color-neutral-700); }
+.session-set-progress span { color: var(--color-neutral-500); }
+.session-rest-card { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 15px; border: 1px solid var(--color-accent-300); border-radius: 13px; background: #effaff; color: var(--color-accent-600); }
+.session-rest-card strong, .session-rest-card span { display: block; }
+.session-rest-card span { margin-top: 4px; color: var(--color-neutral-600); font-size: .88rem; }

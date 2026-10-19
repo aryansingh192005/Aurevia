@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   NavLink,
   Outlet,
@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom';
 import {
   Activity,
+  Accessibility,
   BarChart3,
   BrainCircuit,
   ClipboardList,
@@ -25,6 +26,8 @@ import './AppLayout.css';
 const PATIENT_LINKS = [
   { to: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/patient/exercises', label: 'My Exercises', icon: Dumbbell },
+  { to: '/patient/care-plan', label: 'Care Plan', icon: ClipboardList },
+  { to: '/patient/privacy', label: 'Privacy & Data', icon: Accessibility },
   { to: '/exercises', label: 'Exercise Library', icon: Activity },
   { to: '/sessions', label: 'Session History', icon: History },
   { to: '/progress', label: 'Progress', icon: BarChart3 },
@@ -34,6 +37,7 @@ const THERAPIST_LINKS = [
   { to: '/therapist/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/therapist/patients', label: 'Patients', icon: Users },
   { to: '/therapist/assign-exercise', label: 'Assign Exercise', icon: ClipboardList },
+  { to: '/therapist/care-plans', label: 'Care Plans', icon: ClipboardList },
   { to: '/therapist/sessions', label: 'Session Results', icon: History },
   { to: '/therapist/review', label: 'Review AI Data', icon: BrainCircuit },
 ];
@@ -41,6 +45,12 @@ const THERAPIST_LINKS = [
 function AppLayout() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [largeText, setLargeText] = useState(() => localStorage.getItem('aurevia.largeText') === 'true');
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = largeText ? '112.5%' : '';
+    localStorage.setItem('aurevia.largeText', String(largeText));
+  }, [largeText]);
 
   const {
     user,
@@ -105,6 +115,18 @@ function AppLayout() {
                 <span>{label}</span>
               </NavLink>
             ))}
+
+          {isAuthenticated && (
+            <button
+              type="button"
+              className="accessibility-toggle"
+              aria-pressed={largeText}
+              onClick={() => setLargeText((value) => !value)}
+              title="Adjust text size"
+            >
+              <Accessibility size={16} /> <span>{largeText ? 'Text: large' : 'Text size'}</span>
+            </button>
+          )}
 
           {isAuthenticated && (
             <div className="nav-user">

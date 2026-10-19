@@ -1,0 +1,27 @@
+.care-plans-page { display: grid; gap: 24px; }
+.plan-builder { padding: 24px; }
+.plan-builder__intro { display: flex; gap: 12px; align-items: flex-start; color: var(--color-primary-700); margin-bottom: 20px; }
+.plan-builder__intro h2, .plan-exercises-heading h3, .care-plans-list h2 { margin: 0; color: var(--color-neutral-900); }
+.plan-builder__intro p { margin: 5px 0 0; color: var(--color-neutral-500); }
+.plan-form { display: grid; gap: 20px; }
+.plan-form__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.plan-form label, .plan-exercise-row label { display: grid; gap: 6px; color: var(--color-neutral-600); font-size: .85rem; font-weight: 600; }
+.plan-form input, .plan-form select, .plan-form textarea, .plan-exercise-row input, .plan-exercise-row select { width: 100%; border: 1px solid var(--color-neutral-200); border-radius: 10px; padding: 10px 12px; background: white; color: var(--color-neutral-900); font: inherit; }
+.plan-form input:focus, .plan-form select:focus, .plan-form textarea:focus, .plan-exercise-row input:focus, .plan-exercise-row select:focus { outline: 3px solid #7e14ff2b; border-color: var(--color-primary-500); }
+.plan-form__wide { grid-column: 1 / -1; }
+.plan-exercises-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.plan-exercises-heading h3 { font-size: 1rem; }
+.plan-exercise-row { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(4, minmax(80px, .65fr)) minmax(180px, 1.5fr) 32px; align-items: end; gap: 10px; padding: 14px; border: 1px solid var(--color-neutral-200); border-radius: 14px; background: var(--color-neutral-50); }
+.plan-remove { border: 0; background: transparent; color: var(--color-danger-700); padding: 8px; cursor: pointer; }
+.care-plans-list { display: grid; gap: 12px; }
+.care-plan-card { padding: 20px; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.care-plan-card h3 { margin: 9px 0 4px; color: var(--color-neutral-900); }
+.care-plan-card p { margin: 0; color: var(--color-neutral-500); }
+.care-plan-card .care-plan-card__notes { margin-top: 8px; color: var(--color-neutral-700); }
+.care-plan-card__actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.care-plan-status { display: inline-flex; text-transform: capitalize; font-size: .75rem; font-weight: 700; padding: 4px 9px; border-radius: 99px; background: var(--color-success-50); color: var(--color-success-700); }
+.care-plan-status--paused { background: var(--color-warning-50); color: var(--color-warning-700); }
+.care-plan-status--completed { background: var(--color-neutral-100); color: var(--color-neutral-600); }
+.care-plans-empty { color: var(--color-neutral-500); }
+@media (max-width: 900px) { .plan-exercise-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .plan-exercise-row__exercise, .plan-exercise-row__instructions { grid-column: span 2; } .plan-remove { justify-self: end; } }
+@media (max-width: 640px) { .plan-form__grid { grid-template-columns: 1fr; } .plan-form__wide { grid-column: auto; } .care-plan-card { align-items: flex-start; flex-direction: column; } .care-plan-card__actions { justify-content: flex-start; } }

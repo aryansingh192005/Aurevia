@@ -51,6 +51,7 @@ def session_to_dict(session):
             else None
         ),
         "status": session.status,
+        "movement_recording_consent": session.movement_recording_consent,
         "created_at": session.created_at.isoformat(),
     }
 
@@ -295,7 +296,18 @@ def update_session(user, session_id):
             }
         ), 400
 
+    if "movement_recording_consent" in data:
+        consent = data["movement_recording_consent"]
+        if not isinstance(consent, bool):
+            return jsonify({"error": "movement_recording_consent must be true or false"}), 400
+        if status != "started" or session.status not in {"created", "started"}:
+            return jsonify({"error": "movement data consent can only change before or during an active session"}), 400
+        if consent and session.status != "created":
+            return jsonify({"error": "movement data consent cannot be enabled after a session starts"}), 400
+        session.movement_recording_consent = consent
+
     if status == session.status:
+        db.session.commit()
         return jsonify({"session": session_to_dict(session)}), 200
 
     allowed_transition = (session.status, status) == ("created", "started") or (

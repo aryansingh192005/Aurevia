@@ -1,0 +1,35 @@
+.patient-plans-page { display: grid; gap: 20px; }
+.plan-motivation-row { display: grid; grid-template-columns: .9fr 1.1fr; gap: 16px; }
+.plan-streak, .plan-reminder { padding: 20px; }
+.plan-streak { display: grid; grid-template-columns: 44px 1fr; align-items: center; column-gap: 12px; }
+.plan-streak__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--gradient-brand-soft); color: var(--color-primary-700); }
+.plan-streak strong { display: block; font: 700 1.2rem var(--font-family-display); color: var(--color-neutral-900); }
+.plan-streak span:not(.plan-streak__icon) { color: var(--color-neutral-500); font-size: .82rem; }
+.plan-streak p { grid-column: 1 / -1; margin: 14px 0 0; color: var(--color-neutral-500); font-size: .87rem; }
+.plan-reminder__heading { display: flex; align-items: flex-start; gap: 11px; color: var(--color-primary-700); }
+.plan-reminder__heading h2 { margin: 0; color: var(--color-neutral-900); font-size: 1rem; }
+.plan-reminder__heading p { margin: 4px 0 0; color: var(--color-neutral-500); font-size: .82rem; }
+.plan-reminder__controls { display: flex; gap: 10px; margin-top: 14px; }
+.plan-reminder__controls input { border: 1px solid var(--color-neutral-200); border-radius: 10px; padding: 8px 10px; font: inherit; }
+.patient-plan-card { overflow: hidden; }
+.patient-plan-card__header { padding: 22px 24px; background: var(--gradient-brand-soft); display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.patient-plan-eyebrow { display: inline-flex; gap: 6px; align-items: center; color: var(--color-primary-700); font-size: .78rem; font-weight: 700; }
+.patient-plan-card__header h2 { margin: 8px 0 4px; color: var(--color-neutral-900); }
+.patient-plan-card__header p { margin: 0; color: var(--color-neutral-600); }
+.patient-plan-therapist { color: var(--color-neutral-600); font-size: .88rem; }
+.patient-plan-note { margin: 18px 24px 0; padding: 14px 16px; border-radius: 12px; background: var(--color-neutral-50); color: var(--color-neutral-700); line-height: 1.6; }
+.patient-plan-exercises { padding: 8px 24px; }
+.patient-plan-exercise { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--color-neutral-100); }
+.patient-plan-exercise:last-child { border-bottom: 0; }
+.patient-plan-exercise__icon { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: var(--color-primary-50); color: var(--color-primary-700); }
+.patient-plan-exercise h3 { margin: 0 0 4px; color: var(--color-neutral-900); }
+.patient-plan-exercise p { margin: 0; color: var(--color-neutral-500); font-size: .84rem; }
+.patient-plan-exercise .patient-plan-exercise__cue { margin-top: 6px; color: var(--color-neutral-700); }
+.patient-plan-exercise__done { display: inline-block; margin-top: 6px; color: var(--color-success-700); font-size: .78rem; font-weight: 650; }
+.patient-plan-rest { display: inline-flex; align-items: center; gap: 5px; color: var(--color-neutral-500); white-space: nowrap; font-size: .82rem; }
+.patient-plan-safety { margin: 0; padding: 14px 24px 20px; color: var(--color-neutral-500); font-size: .82rem; }
+.patient-plan-empty { padding: 36px; text-align: center; color: var(--color-primary-700); }
+.patient-plan-empty h2 { color: var(--color-neutral-900); }
+.patient-plan-empty p { color: var(--color-neutral-500); }
+@media (max-width: 800px) { .plan-motivation-row { grid-template-columns: 1fr; } .patient-plan-exercise { grid-template-columns: 42px minmax(0, 1fr) auto; } .patient-plan-rest { grid-column: 2; } .patient-plan-exercise > a { grid-column: 3; grid-row: 1 / span 2; } }
+@media (max-width: 560px) { .patient-plan-card__header { align-items: flex-start; flex-direction: column; } .patient-plan-exercises { padding-inline: 16px; } .patient-plan-exercise { grid-template-columns: 36px minmax(0, 1fr); } .patient-plan-exercise > a, .patient-plan-rest { grid-column: 2; grid-row: auto; } .patient-plan-exercise > a .button { width: 100%; } }

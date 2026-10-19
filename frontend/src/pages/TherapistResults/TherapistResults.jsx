@@ -22,6 +22,9 @@ function TherapistResults() {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [feedbackBySession, setFeedbackBySession] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [savingSession, setSavingSession] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -32,7 +35,14 @@ function TherapistResults() {
 
         if (!isMounted) return;
 
-        setResults(response.data.results || []);
+        const loadedResults = response.data.results || [];
+        setResults(loadedResults);
+        const sessionIds = [...new Set(loadedResults.map((result) => result.session.id))];
+        const feedbackResponses = await Promise.all(sessionIds.map(async (id) => {
+          try { return [id, (await api.get(`/sessions/${id}/feedback`)).data.feedback || []]; }
+          catch { return [id, []]; }
+        }));
+        if (isMounted) setFeedbackBySession(Object.fromEntries(feedbackResponses));
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -50,6 +60,23 @@ function TherapistResults() {
       isMounted = false;
     };
   }, []);
+
+  async function sendFeedback(sessionId) {
+    const message = (drafts[sessionId] || '').trim();
+    if (!message) return;
+    setSavingSession(sessionId);
+    setError('');
+    try {
+      const response = await api.post(`/sessions/${sessionId}/feedback`, { message });
+      setFeedbackBySession((current) => ({
+        ...current,
+        [sessionId]: [response.data.feedback, ...(current[sessionId] || [])],
+      }));
+      setDrafts((current) => ({ ...current, [sessionId]: '' }));
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || 'Unable to save therapist feedback.');
+    } finally { setSavingSession(null); }
+  }
 
   if (isLoading) {
     return <Spinner label="Loading session results..." fullPage />;
@@ -115,6 +142,30 @@ function TherapistResults() {
                 <div className="result-card__footer">
                   <span>Session #{result.session.id} · {result.session.status}</span>
                   <span>{new Date(result.created_at).toLocaleString()}</span>
+                </div>
+
+                <div className="result-therapist-feedback">
+                  <strong>Care team notes</strong>
+                  {(feedbackBySession[result.session.id] || []).map((note) => (
+                    <p className="result-therapist-feedback__note" key={note.id}>
+                      {note.message}<small>{note.therapist.name} · {new Date(note.created_at).toLocaleString()}</small>
+                    </p>
+                  ))}
+                  <label className="visually-hidden" htmlFor={`feedback-${result.session.id}`}>Add patient feedback</label>
+                  <textarea
+                    id={`feedback-${result.session.id}`}
+                    rows="2"
+                    maxLength="2000"
+                    placeholder="Share encouragement or a next-step cue with the patient"
+                    value={drafts[result.session.id] || ''}
+                    onChange={(event) => setDrafts((current) => ({ ...current, [result.session.id]: event.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    className="result-feedback-submit"
+                    disabled={savingSession === result.session.id || !(drafts[result.session.id] || '').trim()}
+                    onClick={() => sendFeedback(result.session.id)}
+                  >{savingSession === result.session.id ? 'Saving…' : 'Send note to patient'}</button>
                 </div>
               </Card>
             );

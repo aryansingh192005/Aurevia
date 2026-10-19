@@ -23,9 +23,12 @@ const Progress = lazy(() => import('./pages/Progress/Progress'));
 const ExerciseSession = lazy(() => import('./pages/ExerciseSession/ExerciseSession'));
 const PatientDashboard = lazy(() => import('./pages/PatientDashboard/PatientDashboard'));
 const PatientExercises = lazy(() => import('./pages/PatientExercises/PatientExercises'));
+const PatientPlans = lazy(() => import('./pages/PatientPlans/PatientPlans'));
+const Privacy = lazy(() => import('./pages/Privacy/Privacy'));
 const TherapistDashboard = lazy(() => import('./pages/TherapistDashboard/TherapistDashboard'));
 const TherapistPatients = lazy(() => import('./pages/TherapistPatients/TherapistPatients'));
 const AssignExercise = lazy(() => import('./pages/AssignExercise/AssignExercise'));
+const TherapistPlans = lazy(() => import('./pages/TherapistPlans/TherapistPlans'));
 const TherapistResults = lazy(() => import('./pages/TherapistResults/TherapistResults'));
 const TherapistReview = lazy(() => import('./pages/TherapistReview/TherapistReview'));
 
@@ -62,6 +65,9 @@ function App() {
     element={<PatientExercises />}
   />
 
+  <Route path="/patient/care-plan" element={<PatientPlans />} />
+  <Route path="/patient/privacy" element={<Privacy />} />
+
   <Route
     path="/patient/exercises/:assignmentId/start"
     element={<ExerciseSession />}
@@ -85,6 +91,8 @@ function App() {
               path="/therapist/assign-exercise"
               element={<AssignExercise />}
             />
+
+            <Route path="/therapist/care-plans" element={<TherapistPlans />} />
 
             <Route
               path="/therapist/sessions"

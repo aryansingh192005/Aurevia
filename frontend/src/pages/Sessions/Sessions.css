@@ -46,3 +46,6 @@
     align-items: flex-start;
   }
 }
+.session-therapist-notes { grid-column: 1 / -1; width: 100%; padding: 10px 13px; border-radius: 10px; background: var(--color-primary-50); color: var(--color-neutral-700); }
+.session-therapist-notes p { margin: 0; line-height: 1.5; }
+.session-therapist-notes p + p { margin-top: 8px; }

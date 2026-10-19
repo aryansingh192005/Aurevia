@@ -12,6 +12,9 @@ from app.routes.patients import patients_bp
 from app.routes.progress import progress_bp
 from app.routes.recordings import recordings_bp
 from app.routes.ai import ai_bp
+from app.routes.plans import plans_bp
+from app.routes.feedback import feedback_bp
+from app.routes.privacy import privacy_bp
 
 def create_app(config=None):
     app = Flask(__name__)
@@ -85,5 +88,8 @@ def create_app(config=None):
     )
 
     app.register_blueprint(ai_bp, url_prefix="/api")
+    app.register_blueprint(plans_bp, url_prefix="/api")
+    app.register_blueprint(feedback_bp, url_prefix="/api")
+    app.register_blueprint(privacy_bp, url_prefix="/api")
 
     return app

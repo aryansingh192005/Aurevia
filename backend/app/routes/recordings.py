@@ -61,6 +61,10 @@ def create_recording(user, session_id):
 
     if rehab_session is None or rehab_session.user_id != user.id:
         return jsonify({"error": "session not found"}), 404
+    if rehab_session.status != "started":
+        return jsonify({"error": "movement recordings can only be saved during an active session"}), 400
+    if not rehab_session.movement_recording_consent:
+        return jsonify({"error": "patient has not opted in to saving movement recordings"}), 403
 
     payload = request.get_json(silent=True) or {}
 

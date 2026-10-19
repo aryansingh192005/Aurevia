@@ -1,0 +1,17 @@
+.privacy-page { display: grid; gap: 18px; }
+.privacy-card { display: flex; gap: 16px; padding: 22px; }
+.privacy-card__icon { flex: 0 0 44px; height: 44px; display: grid; place-items: center; color: var(--color-primary-700); background: var(--color-primary-50); border-radius: 14px; }
+.privacy-card__body h2, .privacy-action-card h2 { margin: 0; color: var(--color-neutral-900); font-size: 1.05rem; }
+.privacy-card__body p, .privacy-action-card p { margin: 8px 0 0; color: var(--color-neutral-600); line-height: 1.6; }
+.privacy-actions { display: grid; gap: 14px; }
+.privacy-action-card { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 20px; color: var(--color-primary-700); }
+.privacy-action-card--delete { color: var(--color-danger-700); }
+.privacy-action-card__button { justify-self: end; }
+.privacy-footnote { margin: 0; color: var(--color-neutral-500); font-size: .85rem; }
+.privacy-account-delete { display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) auto; align-items: center; gap: 16px; padding: 20px; border: 1px solid #fecaca; }
+.privacy-account-delete h2 { margin: 0; color: var(--color-danger-700); font-size: 1rem; }
+.privacy-account-delete p { margin: 6px 0 0; color: var(--color-neutral-600); line-height: 1.5; font-size: .88rem; }
+.privacy-account-delete label { display: grid; gap: 5px; color: var(--color-neutral-600); font-size: .8rem; }
+.privacy-account-delete input { width: 100%; border: 1px solid var(--color-neutral-300); border-radius: 9px; padding: 9px 10px; font: inherit; }
+@media (max-width: 720px) { .privacy-action-card { grid-template-columns: 26px minmax(0, 1fr); } .privacy-action-card > button { grid-column: 2; justify-self: start; } }
+@media (max-width: 900px) { .privacy-account-delete { grid-template-columns: 1fr; } .privacy-account-delete > button { justify-self: start; } }

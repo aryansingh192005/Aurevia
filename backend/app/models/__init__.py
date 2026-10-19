@@ -4,6 +4,8 @@ from app.models.movement_recording import MovementRecording
 from app.models.progress import ProgressRecord
 from app.models.session import RehabilitationSession
 from app.models.session_result import SessionResult
+from app.models.session_feedback import SessionFeedback
+from app.models.rehabilitation_plan import RehabilitationPlan, PlanExercise
 from app.models.user import User
 
 __all__ = [
@@ -13,5 +15,8 @@ __all__ = [
     "ProgressRecord",
     "RehabilitationSession",
     "SessionResult",
+    "SessionFeedback",
+    "RehabilitationPlan",
+    "PlanExercise",
     "User",
 ]

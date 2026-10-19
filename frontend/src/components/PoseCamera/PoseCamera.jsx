@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import { AlertTriangle, Camera, Loader2 } from 'lucide-react';
+import { AlertTriangle, Camera, Loader2, Timer } from 'lucide-react';
 
 import { RepCounter, SKELETON_EDGES, extractJointAngles } from '../../ai/poseAnalysis';
 import api from '../../services/api';
@@ -17,7 +17,7 @@ const MODEL_URL = '/models/pose_landmarker_lite.task';
  * ever leave the browser).
  */
 const PoseCamera = forwardRef(function PoseCamera(
-  { targetArea, active, onUpdate, sessionId, logRecordings = true },
+  { targetArea, active, onUpdate, sessionId, logRecordings = false, paused = false },
   ref,
 ) {
   const videoRef = useRef(null);
@@ -27,6 +27,7 @@ const PoseCamera = forwardRef(function PoseCamera(
   const rafRef = useRef(null);
   const streamRef = useRef(null);
   const modelAvailableRef = useRef(false);
+  const logRecordingsRef = useRef(logRecordings);
   const predictionTrackerRef = useRef({ results: [], pending: [] });
   const recordingRequestsRef = useRef([]);
   const latestUpdateRef = useRef(null);
@@ -37,10 +38,14 @@ const PoseCamera = forwardRef(function PoseCamera(
   const [modelAvailable, setModelAvailable] = useState(null);
   const [aiPredictions, setAiPredictions] = useState([]);
 
+  useEffect(() => {
+    logRecordingsRef.current = logRecordings;
+  }, [logRecordings]);
+
   // Saving a training recording is opt-in. Live LSTM inference remains
   // available regardless of that choice.
   function logRep({ repIndex, sequence, label, confidence }) {
-    if (logRecordings && sessionId) {
+    if (logRecordingsRef.current && sessionId) {
       const recordingRequest = api
         .post(`/sessions/${sessionId}/recordings`, {
           rep_index: repIndex,
@@ -305,8 +310,8 @@ const PoseCamera = forwardRef(function PoseCamera(
 
         {status === 'ready' && !active && (
           <div className="pose-camera__overlay pose-camera__overlay--dim">
-            <Camera size={28} />
-            <p>Camera will start once you begin the exercise.</p>
+            {paused ? <Timer size={28} /> : <Camera size={28} />}
+            <p>{paused ? 'Rest break. The camera is paused; resume when the timer ends.' : 'Camera will start once you begin the exercise.'}</p>
           </div>
         )}
       </div>

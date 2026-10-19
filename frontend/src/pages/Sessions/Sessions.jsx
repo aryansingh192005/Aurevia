@@ -22,6 +22,7 @@ function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [feedback, setFeedback] = useState({});
 
   useEffect(() => {
     let isMounted = true;
@@ -32,7 +33,13 @@ function Sessions() {
 
         if (!isMounted) return;
 
-        setSessions(response.data.sessions || []);
+        const loaded = response.data.sessions || [];
+        setSessions(loaded);
+        const notes = await Promise.all(loaded.filter((session) => session.status === 'completed').map(async (session) => {
+          try { return [session.id, (await api.get(`/sessions/${session.id}/feedback`)).data.feedback || []]; }
+          catch { return [session.id, []]; }
+        }));
+        if (isMounted) setFeedback(Object.fromEntries(notes));
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -102,6 +109,13 @@ function Sessions() {
               <StatusBadge status={STATUS_TONE[session.status] || 'neutral'}>
                 {session.status.replace('_', ' ')}
               </StatusBadge>
+              {(feedback[session.id] || []).length > 0 && (
+                <div className="session-therapist-notes" aria-label="Therapist feedback">
+                  {(feedback[session.id] || []).map((note) => (
+                    <p key={note.id}><strong>{note.therapist.name}:</strong> {note.message}</p>
+                  ))}
+                </div>
+              )}
             </Card>
           ))}
         </div>

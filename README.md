@@ -134,3 +134,14 @@ The LSTM contract tests do not measure clinical model quality. A real-camera che
 - `ai/models` — checked-in LSTM and pose landmarker model assets.
 - `tests` — backend, preprocessing, feature, and model-contract tests.
 - `deploy` and `Dockerfile.*` — static web server and container deployment files.
+
+## Rehabilitation features
+
+- Therapists can publish patient-specific care plans with exercise targets, weekly frequency, rest intervals, dates, and instructions. Pausing or completing a plan updates its assignments.
+- Patients can follow the plan, see completed sessions and a consistency streak, and set a browser reminder that runs only while Aurevia is open.
+- Exercise sessions include a start countdown, set progress, timed rest breaks, and a safety reminder.
+- Therapists can leave feedback on a session for the patient to review in session history.
+- Patients can download a JSON export, delete optional saved joint-angle repetitions, or permanently delete their account from Privacy & Data.
+- Large text, keyboard focus indicators, and reduced-motion support are available for accessibility.
+
+Apply the care-plan, session-consent, and feedback schema migration with the standard migration command above. It follows `f2a1c9d84e70` and uses revision `e71f4a2c9b10`. Back up the database before applying schema changes.

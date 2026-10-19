@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from app.extensions import db
-from app.models import Exercise, ExerciseAssignment, User
+from app.models import Exercise, ExerciseAssignment, PlanExercise, User
 from app.services.auth import require_auth, require_role
 
 
@@ -19,6 +19,9 @@ VALID_STATUSES = {
 
 
 def serialize_assignment(assignment):
+    plan_item = db.session.scalar(
+        db.select(PlanExercise).where(PlanExercise.assignment_id == assignment.id)
+    )
     return {
         "id": assignment.id,
         "patient": {
@@ -40,6 +43,8 @@ def serialize_assignment(assignment):
         },
         "target_sets": assignment.target_sets,
         "target_reps": assignment.target_reps,
+        "rest_seconds": plan_item.rest_seconds if plan_item else 30,
+        "instructions": plan_item.instructions if plan_item else None,
         "status": assignment.status,
         "assigned_at": assignment.assigned_at.isoformat(),
     }

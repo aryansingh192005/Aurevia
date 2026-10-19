@@ -48,6 +48,12 @@ class RehabilitationSession(db.Model):
         default="created",
     )
 
+    movement_recording_consent = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+    )
+
     created_at = db.Column(
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -75,4 +81,11 @@ class RehabilitationSession(db.Model):
     progress_records = db.relationship(
         "ProgressRecord",
         back_populates="session",
+    )
+
+    therapist_feedback = db.relationship(
+        "SessionFeedback",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="SessionFeedback.created_at.desc()",
     )
