@@ -26,6 +26,11 @@
 .patient-plan-exercise p { margin: 0; color: var(--color-neutral-500); font-size: .84rem; }
 .patient-plan-exercise .patient-plan-exercise__cue { margin-top: 6px; color: var(--color-neutral-700); }
 .patient-plan-exercise__done { display: inline-block; margin-top: 6px; color: var(--color-success-700); font-size: .78rem; font-weight: 650; }
+.patient-plan-weekly { display: grid; gap: 6px; max-width: 300px; margin-top: 10px; }
+.patient-plan-weekly > div:first-child { display: flex; justify-content: space-between; gap: 12px; color: var(--color-neutral-600); font-size: .78rem; }
+.patient-plan-weekly > div:first-child strong { color: var(--color-primary-700); }
+.patient-plan-weekly__track { height: 7px; overflow: hidden; border-radius: 999px; background: var(--color-neutral-100); }
+.patient-plan-weekly__track span { display: block; height: 100%; border-radius: inherit; background: var(--gradient-brand); transition: width 220ms ease; }
 .patient-plan-rest { display: inline-flex; align-items: center; gap: 5px; color: var(--color-neutral-500); white-space: nowrap; font-size: .82rem; }
 .patient-plan-safety { margin: 0; padding: 14px 24px 20px; color: var(--color-neutral-500); font-size: .82rem; }
 .patient-plan-empty { padding: 36px; text-align: center; color: var(--color-primary-700); }

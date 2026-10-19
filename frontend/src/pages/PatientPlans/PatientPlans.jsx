@@ -20,6 +20,12 @@ function PatientPlans() {
   const [error, setError] = useState('');
   const [reminderTime, setReminderTime] = useState(() => localStorage.getItem(reminderKey) || '18:00');
   const [reminderEnabled, setReminderEnabled] = useState(() => localStorage.getItem(reminderKey) !== null);
+  const weekStart = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    return date;
+  }, []);
 
   useEffect(() => {
     Promise.all([api.get('/plans'), api.get('/sessions')])
@@ -78,7 +84,15 @@ function PatientPlans() {
       {plan.notes && <div className="patient-plan-note">{plan.notes}</div>}
       <div className="patient-plan-exercises">{plan.items.map((item) => {
         const completed = sessions.filter((session) => session.assignment_id === item.assignment_id && session.status === 'completed').length;
-        return <article className="patient-plan-exercise" key={item.id}><div className="patient-plan-exercise__icon"><Dumbbell size={18} /></div><div className="patient-plan-exercise__main"><h3>{item.exercise.name}</h3><p>{item.sets} sets · {item.reps} reps · {item.days_per_week} days/week</p>{item.instructions && <p className="patient-plan-exercise__cue">{item.instructions}</p>}<span className="patient-plan-exercise__done">{completed > 0 ? `${completed} completed session${completed === 1 ? '' : 's'}` : 'Ready when you are'}</span></div><span className="patient-plan-rest"><Clock3 size={14} /> {item.rest_seconds}s rest</span><Link to={`/patient/exercises/${item.assignment_id}/start`}><Button>Start exercise</Button></Link></article>;
+        const completedThisWeek = sessions.filter((session) => (
+          session.assignment_id === item.assignment_id
+          && session.status === 'completed'
+          && session.completed_at
+          && new Date(session.completed_at) >= weekStart
+        )).length;
+        const weeklyTarget = Math.max(1, item.days_per_week || plan.days_per_week || 1);
+        const weeklyProgress = Math.min(100, Math.round((completedThisWeek / weeklyTarget) * 100));
+        return <article className="patient-plan-exercise" key={item.id}><div className="patient-plan-exercise__icon"><Dumbbell size={18} /></div><div className="patient-plan-exercise__main"><h3>{item.exercise.name}</h3><p>{item.sets} sets · {item.reps} reps · {weeklyTarget} days/week</p>{item.instructions && <p className="patient-plan-exercise__cue">{item.instructions}</p>}<div className="patient-plan-weekly"><div><span>This week</span><strong>{completedThisWeek} / {weeklyTarget}</strong></div><div className="patient-plan-weekly__track" role="progressbar" aria-label={`${item.exercise.name} sessions completed this week`} aria-valuemin="0" aria-valuemax={weeklyTarget} aria-valuenow={Math.min(completedThisWeek, weeklyTarget)}><span style={{ width: `${weeklyProgress}%` }} /></div></div><span className="patient-plan-exercise__done">{completed > 0 ? `${completed} completed session${completed === 1 ? '' : 's'} total` : 'Ready when you are'}</span></div><span className="patient-plan-rest"><Clock3 size={14} /> {item.rest_seconds}s rest</span><Link to={`/patient/exercises/${item.assignment_id}/start`}><Button>Start exercise</Button></Link></article>;
       })}</div>
       <p className="patient-plan-safety">Stop if you feel pain, dizziness, or unwell, and contact your therapist for guidance.</p>
     </Card>)}
