@@ -56,6 +56,16 @@ function PatientDashboard() {
 
   const activeAssignments = assignments.filter((assignment) => assignment.status === 'active');
   const completedSessions = sessions.filter((session) => session.status === 'completed');
+  const nextAssignment = activeAssignments[0];
+  const resumableSession = nextAssignment
+    ? sessions.find((session) => (
+      session.assignment_id === nextAssignment.id
+      && ['created', 'started'].includes(session.status)
+    ))
+    : null;
+  const nextExercisePath = nextAssignment
+    ? `/patient/exercises/${nextAssignment.id}/start${resumableSession ? `?session_id=${resumableSession.id}` : ''}`
+    : '/patient/exercises';
 
   if (isLoading) {
     return <Spinner label="Loading your dashboard..." fullPage />;
@@ -105,14 +115,20 @@ function PatientDashboard() {
         </Card>
 
         <Card hoverable className="dashboard-tile">
-          <Link to="/patient/exercises" className="dashboard-tile__link">
+          <Link to={nextExercisePath} className="dashboard-tile__link">
             <div className="dashboard-tile__icon dashboard-tile__icon--energy">
               <Dumbbell size={22} />
             </div>
-            <h2>Start Exercise</h2>
-            <p>Begin your next rehabilitation session.</p>
+            <h2>{resumableSession ? 'Resume Your Session' : nextAssignment ? 'Your Next Exercise' : 'Explore Your Exercises'}</h2>
+            <p>
+              {resumableSession
+                ? `Continue ${nextAssignment.exercise.name}${nextAssignment.target_sets ? ` · ${nextAssignment.target_sets} sets` : ''}${nextAssignment.target_reps ? ` · ${nextAssignment.target_reps} reps per set` : ''}.`
+                : nextAssignment
+                  ? `Start ${nextAssignment.exercise.name}${nextAssignment.target_sets ? ` · ${nextAssignment.target_sets} sets` : ''}${nextAssignment.target_reps ? ` · ${nextAssignment.target_reps} reps per set` : ''}.`
+                  : 'View exercises assigned by your therapist and start when you are ready.'}
+            </p>
             <span className="dashboard-tile__cta">
-              Start Now <ArrowRight size={15} />
+              {resumableSession ? 'Resume Session' : nextAssignment ? 'Start Exercise' : 'View Exercises'} <ArrowRight size={15} />
             </span>
           </Link>
         </Card>
