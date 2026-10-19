@@ -28,8 +28,8 @@ VALID_STATUSES = {
 }
 
 
-def session_to_dict(session):
-    return {
+def session_to_dict(session, include_result=False):
+    session_data = {
         "id": session.id,
         "user_id": session.user_id,
         "exercise_id": session.exercise_id,
@@ -54,6 +54,19 @@ def session_to_dict(session):
         "movement_recording_consent": session.movement_recording_consent,
         "created_at": session.created_at.isoformat(),
     }
+
+    if include_result:
+        result = next(iter(session.results), None)
+        session_data["result"] = (
+            {
+                "result_data": result.result_data,
+                "created_at": result.created_at.isoformat(),
+            }
+            if result is not None
+            else None
+        )
+
+    return session_data
 
 
 def session_result_to_dict(result):
@@ -128,7 +141,7 @@ def get_sessions(user):
     return jsonify(
         {
             "sessions": [
-                session_to_dict(session)
+                session_to_dict(session, include_result=user.role == "patient")
                 for session in sessions
             ]
         }
@@ -178,7 +191,7 @@ def get_session(user, session_id):
 
     return jsonify(
         {
-            "session": session_to_dict(session),
+            "session": session_to_dict(session, include_result=user.role == "patient"),
         }
     ), 200
 

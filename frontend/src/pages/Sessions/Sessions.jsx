@@ -109,6 +109,35 @@ function Sessions() {
               <StatusBadge status={STATUS_TONE[session.status] || 'neutral'}>
                 {session.status.replace('_', ' ')}
               </StatusBadge>
+              {session.status === 'completed' && (
+                <div className="session-result" aria-label="Session result summary">
+                  {session.result ? (
+                    <>
+                      <strong>Session summary</strong>
+                      <div className="session-result__metrics">
+                        {typeof session.result.result_data?.repetitions === 'number' && (
+                          <span><b>{session.result.result_data.repetitions}</b> reps</span>
+                        )}
+                        {typeof session.result.result_data?.correct_repetitions === 'number' && (
+                          <span><b>{session.result.result_data.correct_repetitions}</b> correct reps</span>
+                        )}
+                        {typeof session.result.result_data?.accuracy === 'number' && (
+                          <span><b>{session.result.result_data.accuracy}%</b> accuracy</span>
+                        )}
+                      </div>
+                      {session.result.result_data?.patient_check_in && (
+                        <div className="session-result__checkin">
+                          <strong>Your check-in · self-reported</strong>
+                          <span>Discomfort {session.result.result_data.patient_check_in.discomfort_rating}/10 · Effort {session.result.result_data.patient_check_in.effort_rating}/10</span>
+                          {session.result.result_data.patient_check_in.note && (
+                            <p>{session.result.result_data.patient_check_in.note}</p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : <span className="session-result__empty">No summary was saved for this session.</span>}
+                </div>
+              )}
               {(feedback[session.id] || []).length > 0 && (
                 <div className="session-therapist-notes" aria-label="Therapist feedback">
                   {(feedback[session.id] || []).map((note) => (
