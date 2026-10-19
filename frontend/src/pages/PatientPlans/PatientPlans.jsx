@@ -44,6 +44,7 @@ function PatientPlans() {
   }, [reminderEnabled, reminderTime, user?.id]);
 
   const activePlans = plans.filter((plan) => plan.status === 'active');
+  const pastPlans = plans.filter((plan) => plan.status !== 'active');
   const streak = useMemo(() => {
     const days = new Set(sessions.filter((s) => s.status === 'completed' && s.completed_at).map((s) => new Date(s.completed_at).toLocaleDateString()));
     let count = 0;
@@ -81,6 +82,14 @@ function PatientPlans() {
       })}</div>
       <p className="patient-plan-safety">Stop if you feel pain, dizziness, or unwell, and contact your therapist for guidance.</p>
     </Card>)}
+    {pastPlans.length > 0 && <details className="patient-plan-history">
+      <summary>Past care plans <span>{pastPlans.length}</span></summary>
+      <div className="patient-plan-history__list">{pastPlans.map((plan) => <Card className="patient-plan-history__item" key={plan.id}>
+        <div className="patient-plan-history__heading"><div><h2>{plan.title}</h2><p>With {plan.therapist?.name || 'your therapist'} · {plan.items.length} exercises</p></div><span className={`patient-plan-status patient-plan-status--${plan.status}`}>{plan.status}</span></div>
+        {plan.notes && <p className="patient-plan-history__notes">{plan.notes}</p>}
+        <ul>{plan.items.map((item) => <li key={item.id}><strong>{item.exercise.name}</strong> · {item.sets} sets × {item.reps} reps{item.instructions ? ` · ${item.instructions}` : ''}</li>)}</ul>
+      </Card>)}</div>
+    </details>}
   </div>;
 }
 

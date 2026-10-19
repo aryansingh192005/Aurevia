@@ -11,6 +11,7 @@
 .plan-form__wide { grid-column: 1 / -1; }
 .plan-exercises-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .plan-exercises-heading h3 { font-size: 1rem; }
+.plan-form__limit { margin: -12px 0 0; color: var(--color-neutral-500); font-size: .82rem; }
 .plan-exercise-row { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(4, minmax(80px, .65fr)) minmax(180px, 1.5fr) 32px; align-items: end; gap: 10px; padding: 14px; border: 1px solid var(--color-neutral-200); border-radius: 14px; background: var(--color-neutral-50); }
 .plan-remove { border: 0; background: transparent; color: var(--color-danger-700); padding: 8px; cursor: pointer; }
 .care-plans-list { display: grid; gap: 12px; }
