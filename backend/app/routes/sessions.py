@@ -392,6 +392,26 @@ def create_session_result(user, session_id):
             }
         ), 400
 
+    patient_check_in = result_data.get("patient_check_in")
+    if patient_check_in is not None:
+        if not isinstance(patient_check_in, dict):
+            return jsonify({"error": "patient_check_in must be an object"}), 400
+        discomfort = patient_check_in.get("discomfort_rating")
+        effort = patient_check_in.get("effort_rating")
+        note = patient_check_in.get("note", "")
+        if any(not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 10 for value in (discomfort, effort)):
+            return jsonify({"error": "check-in ratings must be whole numbers from 0 to 10"}), 400
+        if not isinstance(note, str) or len(note) > 1000:
+            return jsonify({"error": "check-in note must be 1000 characters or fewer"}), 400
+        result_data = {
+            **result_data,
+            "patient_check_in": {
+                "discomfort_rating": discomfort,
+                "effort_rating": effort,
+                "note": note.strip() or None,
+            },
+        }
+
     result_type = result_type.strip()
 
     result = SessionResult(

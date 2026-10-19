@@ -18,5 +18,8 @@
 .patient-overview-result__metrics { display: flex; flex-wrap: wrap; gap: 8px; }
 .patient-overview-result__metrics span { padding: 7px 9px; border-radius: 9px; background: var(--color-neutral-50); color: var(--color-neutral-600); font-size: .76rem; white-space: nowrap; }
 .patient-overview-result__metrics strong { color: var(--color-primary-700); }
+.patient-overview-checkin { flex-basis: 100%; display: grid; gap: 5px; padding: 10px 12px; border-radius: 10px; background: var(--color-neutral-50); color: var(--color-neutral-700); font-size: .81rem; }
+.patient-overview-checkin strong { color: var(--color-neutral-800); }
+.patient-overview-checkin p { margin: 0; white-space: pre-wrap; line-height: 1.45; }
 @media (max-width: 820px) { .patient-overview-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .patient-overview-item, .patient-overview-result { align-items: flex-start; flex-direction: column; } .patient-overview-stats > .card { padding: 12px; } }

@@ -88,3 +88,8 @@
 .result-therapist-feedback__note small { display: block; margin-top: 5px; color: var(--color-neutral-500); }
 .result-feedback-submit { justify-self: start; border: 0; border-radius: 9px; background: var(--color-primary-600); color: white; padding: 9px 13px; font: inherit; font-size: .82rem; font-weight: 650; cursor: pointer; }
 .result-feedback-submit:disabled { opacity: .55; cursor: not-allowed; }
+.result-patient-checkin { display: grid; gap: 8px; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--color-neutral-200); border-radius: 11px; background: var(--color-neutral-50); color: var(--color-neutral-700); font-size: .84rem; }
+.result-patient-checkin > strong { color: var(--color-neutral-800); }
+.result-patient-checkin > div { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.result-patient-checkin b { color: var(--color-primary-700); }
+.result-patient-checkin p { margin: 0; white-space: pre-wrap; line-height: 1.5; }

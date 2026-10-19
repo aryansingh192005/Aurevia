@@ -102,6 +102,7 @@ function TherapistResults() {
         <div className="results-list">
           {results.map((result) => {
             const accuracy = result.result_data?.accuracy;
+            const patientCheckIn = result.result_data?.patient_check_in;
 
             return (
               <Card key={result.id} className="result-card">
@@ -123,7 +124,7 @@ function TherapistResults() {
 
                 <div className="result-card__metrics">
                   {Object.entries(result.result_data || {})
-                    .filter(([key]) => key !== 'feedback')
+                    .filter(([key]) => !['feedback', 'patient_check_in'].includes(key))
                     .map(([key, value]) => (
                       <div key={key} className="result-metric">
                         <span className="result-metric__value">{String(value)}</span>
@@ -131,6 +132,8 @@ function TherapistResults() {
                       </div>
                     ))}
                 </div>
+
+                {patientCheckIn && <div className="result-patient-checkin"><strong>Patient check-in · self-reported</strong><div><span>Discomfort <b>{patientCheckIn.discomfort_rating}/10</b></span><span>Effort <b>{patientCheckIn.effort_rating}/10</b></span></div>{patientCheckIn.note && <p>{patientCheckIn.note}</p>}</div>}
 
                 {result.result_data?.feedback && (
                   <div className="result-card__feedback">

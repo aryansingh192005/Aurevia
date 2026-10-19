@@ -45,6 +45,10 @@ function ExerciseSession() {
 
   const [resultSubmitted, setResultSubmitted] = useState(false);
   const [trainingConsent, setTrainingConsent] = useState(false);
+  const [includePatientCheckIn, setIncludePatientCheckIn] = useState(false);
+  const [discomfortRating, setDiscomfortRating] = useState(0);
+  const [effortRating, setEffortRating] = useState(5);
+  const [patientNote, setPatientNote] = useState('');
   const [startCountdown, setStartCountdown] = useState(null);
   const [completedSets, setCompletedSets] = useState(0);
   const [resting, setResting] = useState(false);
@@ -223,12 +227,21 @@ function ExerciseSession() {
     setIsSubmittingResult(true);
     setError('');
 
-    const resultData = finalResult || {
+    const resultData = {
+      ...(finalResult || {
       repetitions: 0,
       correct_repetitions: 0,
       incorrect_repetitions: 0,
       accuracy: 0,
       feedback: 'No AI tracking data was captured for this session.',
+      }),
+      ...(includePatientCheckIn ? {
+        patient_check_in: {
+          discomfort_rating: Number(discomfortRating),
+          effort_rating: Number(effortRating),
+          note: patientNote.trim(),
+        },
+      } : {}),
     };
 
     try {
@@ -482,6 +495,15 @@ function ExerciseSession() {
                       No AI tracking data was captured — camera may not have been active.
                     </p>
                   )}
+
+                  <div className="session-checkin">
+                    <label className="session-checkin__toggle"><input type="checkbox" checked={includePatientCheckIn} onChange={(event) => setIncludePatientCheckIn(event.target.checked)} /><span><strong>Share an optional check-in with your therapist</strong><small>Your answers are your own report and are separate from Aurevia’s movement analysis. You can skip this.</small></span></label>
+                    {includePatientCheckIn && <div className="session-checkin__fields">
+                      <label><span>Discomfort after the exercise <strong>{discomfortRating}/10</strong></span><input type="range" min="0" max="10" step="1" value={discomfortRating} onChange={(event) => setDiscomfortRating(event.target.value)} /><small><span>None</span><span>Very strong</span></small></label>
+                      <label><span>How hard the exercise felt <strong>{effortRating}/10</strong></span><input type="range" min="0" max="10" step="1" value={effortRating} onChange={(event) => setEffortRating(event.target.value)} /><small><span>Very easy</span><span>Very hard</span></small></label>
+                      <label className="session-checkin__note">Optional note<textarea rows="2" maxLength="1000" value={patientNote} onChange={(event) => setPatientNote(event.target.value)} placeholder="Anything you want your therapist to know?" /></label>
+                    </div>}
+                  </div>
 
                   <Button
                     onClick={submitResult}

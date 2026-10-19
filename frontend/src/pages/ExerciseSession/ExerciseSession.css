@@ -285,3 +285,16 @@
 .session-rest-card { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 15px; border: 1px solid var(--color-accent-300); border-radius: 13px; background: #effaff; color: var(--color-accent-600); }
 .session-rest-card strong, .session-rest-card span { display: block; }
 .session-rest-card span { margin-top: 4px; color: var(--color-neutral-600); font-size: .88rem; }
+.session-checkin { display: grid; gap: 12px; margin: 8px 0; padding: 14px; border: 1px solid var(--color-neutral-200); border-radius: 12px; }
+.session-checkin__toggle { display: flex; align-items: flex-start; gap: 10px; color: var(--color-neutral-700); cursor: pointer; }
+.session-checkin__toggle input { margin-top: 4px; accent-color: var(--color-primary-600); }
+.session-checkin__toggle strong, .session-checkin__toggle small { display: block; }
+.session-checkin__toggle small { margin-top: 4px; color: var(--color-neutral-500); font-size: .79rem; line-height: 1.5; }
+.session-checkin__fields { display: grid; gap: 12px; padding-top: 4px; }
+.session-checkin__fields > label { display: grid; gap: 7px; color: var(--color-neutral-700); font-size: .84rem; }
+.session-checkin__fields label > span { display: flex; justify-content: space-between; gap: 10px; }
+.session-checkin__fields label > span strong { color: var(--color-primary-700); }
+.session-checkin__fields input[type="range"] { width: 100%; accent-color: var(--color-primary-600); }
+.session-checkin__fields label > small { display: flex; justify-content: space-between; color: var(--color-neutral-500); font-size: .73rem; }
+.session-checkin__note textarea { width: 100%; resize: vertical; border: 1px solid var(--color-neutral-200); border-radius: 9px; padding: 9px 11px; color: var(--color-neutral-800); font: inherit; }
+.session-checkin__note textarea:focus { outline: 3px solid #7e14ff2b; border-color: var(--color-primary-500); }
