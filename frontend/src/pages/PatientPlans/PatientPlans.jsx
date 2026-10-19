@@ -40,9 +40,19 @@ function PatientPlans() {
       const now = new Date();
       const [hour, minute] = reminderTime.split(':').map(Number);
       const key = `aurevia.reminder.sent.${user?.id || 'patient'}.${now.toLocaleDateString()}`;
-      if (now.getHours() === hour && now.getMinutes() === minute && localStorage.getItem(key) !== 'yes') {
-        new Notification('Aurevia movement reminder', { body: 'Your care plan is ready when you are. Take it at your own pace.' });
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const reminderMinutes = hour * 60 + minute;
+      const isWithinReminderWindow = currentMinutes >= reminderMinutes && currentMinutes < reminderMinutes + 60;
+
+      if (isWithinReminderWindow && localStorage.getItem(key) !== 'yes') {
         localStorage.setItem(key, 'yes');
+        try {
+          new Notification('Aurevia movement reminder', { body: 'Your care plan is ready when you are. Take it at your own pace.' });
+          setError('');
+        } catch {
+          localStorage.removeItem(key);
+          setError('Desktop reminders are unavailable. Check your browser notification permission.');
+        }
       }
     };
     const timer = window.setInterval(checkReminder, 30000);
