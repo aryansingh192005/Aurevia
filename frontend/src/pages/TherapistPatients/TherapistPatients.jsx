@@ -93,6 +93,10 @@ function TherapistPatients() {
             const patientResults = results.filter((result) => result.patient.id === patient.id);
             const savedSessions = new Set(patientResults.map((result) => result.session.id));
             const latestCompletedAt = patientResults.map((result) => result.session.completed_at).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))[0];
+            const latestCheckInResult = [...patientResults]
+              .filter((result) => result.result_data?.patient_check_in)
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+            const latestCheckIn = latestCheckInResult?.result_data.patient_check_in;
             return (
             <Card key={patient.id} hoverable className="patient-card">
               <span className="patient-card__avatar">
@@ -106,6 +110,7 @@ function TherapistPatients() {
               </div>
               <span className="patient-card__id">#{patient.id}</span>
               <div className="patient-card__summary"><span><ClipboardList size={14} /> {activeExerciseCount} active exercise{activeExerciseCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {savedSessions.size} saved session result{savedSessions.size === 1 ? '' : 's'}</span>{latestCompletedAt && <small>Latest result {new Date(latestCompletedAt).toLocaleDateString()}</small>}</div>
+              {latestCheckIn && <div className="patient-card__checkin"><strong>Latest patient check-in</strong><span>Self-reported · {new Date(latestCheckInResult.created_at).toLocaleDateString()}</span><p>Discomfort {latestCheckIn.discomfort_rating}/10 · Effort {latestCheckIn.effort_rating}/10</p></div>}
               <div className="patient-card__actions"><Link to={`/therapist/patients/${patient.id}`}><Button variant="secondary" fullWidth icon={<Eye size={15} />}>Overview</Button></Link><Link to={`/therapist/assign-exercise?patient_id=${patient.id}`}><Button variant="secondary" fullWidth icon={<ClipboardList size={15} />}>Assign exercise</Button></Link></div>
             </Card>
           );})}
