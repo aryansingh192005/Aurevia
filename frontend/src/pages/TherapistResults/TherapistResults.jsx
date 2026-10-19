@@ -120,7 +120,7 @@ function TherapistResults() {
 
                 <div className="result-card__metrics">
                   {Object.entries(result.result_data || {})
-                    .filter(([key]) => !['feedback', 'patient_check_in', 'analysis_source'].includes(key))
+                    .filter(([key]) => !['feedback', 'patient_check_in', 'analysis_source', 'previous_submissions'].includes(key))
                     .map(([key, value]) => (
                       <div key={key} className="result-metric">
                         <span className="result-metric__value">{String(value)}</span>

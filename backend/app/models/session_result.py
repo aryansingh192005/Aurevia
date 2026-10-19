@@ -18,6 +18,7 @@ class SessionResult(db.Model):
         db.Integer,
         db.ForeignKey("rehabilitation_sessions.id"),
         nullable=False,
+        index=True,
     )
 
     result_type = db.Column(
