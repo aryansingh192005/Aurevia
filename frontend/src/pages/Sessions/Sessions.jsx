@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CalendarCheck, CalendarClock, History } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CalendarCheck, CalendarClock, History, Search } from 'lucide-react';
 
 import api from '../../services/api';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -22,6 +22,19 @@ function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [exerciseQuery, setExerciseQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredSessions = useMemo(() => {
+    const query = exerciseQuery.trim().toLocaleLowerCase();
+    return sessions.filter((session) => {
+      const matchesExercise = !query
+        || session.exercise.name.toLocaleLowerCase().includes(query)
+        || (session.exercise.target_area || '').toLocaleLowerCase().includes(query);
+      const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
+      return matchesExercise && matchesStatus;
+    });
+  }, [exerciseQuery, sessions, statusFilter]);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,8 +86,42 @@ function Sessions() {
           description="Your rehabilitation sessions will appear here once you start one."
         />
       ) : (
-        <div className="session-list">
-          {sessions.map((session) => (
+        <>
+          {sessions.length > 0 && (
+            <div className="session-history-controls" aria-label="Filter session history">
+              <label className="session-history-search">
+                <Search size={17} aria-hidden="true" />
+                <span className="sr-only">Search exercise or body area</span>
+                <input
+                  type="search"
+                  value={exerciseQuery}
+                  onChange={(event) => setExerciseQuery(event.target.value)}
+                  placeholder="Search exercise or body area"
+                />
+              </label>
+              <label className="session-history-status">
+                <span>Status</span>
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                  <option value="all">All sessions</option>
+                  <option value="completed">Completed</option>
+                  <option value="started">In progress</option>
+                  <option value="created">Not started</option>
+                </select>
+              </label>
+              <p className="session-history-count" aria-live="polite">
+                Showing {filteredSessions.length} of {sessions.length} sessions
+              </p>
+            </div>
+          )}
+          {sessions.length > 0 && filteredSessions.length === 0 ? (
+            <EmptyState
+              icon={<History size={28} />}
+              title="No matching sessions"
+              description="Try another exercise name or change the status filter."
+            />
+          ) : (
+            <div className="session-list">
+              {filteredSessions.map((session) => (
             <Card key={session.id} className="session-row">
               <div className="session-row__main">
                 <h2>{session.exercise.name}</h2>
@@ -144,8 +191,10 @@ function Sessions() {
                 </section>
               )}
             </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
