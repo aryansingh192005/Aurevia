@@ -16,6 +16,7 @@ function TherapistPatients() {
   const [patients, setPatients] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [results, setResults] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,8 +26,8 @@ function TherapistPatients() {
 
     async function loadPatients() {
       try {
-        const [response, assignmentResponse, resultResponse] = await Promise.all([
-          api.get('/patients'), api.get('/assignments'), api.get('/session-results'),
+        const [response, assignmentResponse, resultResponse, sessionResponse] = await Promise.all([
+          api.get('/patients'), api.get('/assignments'), api.get('/session-results'), api.get('/sessions'),
         ]);
 
         if (!isMounted) return;
@@ -34,6 +35,7 @@ function TherapistPatients() {
         setPatients(response.data.patients || []);
         setAssignments(assignmentResponse.data.assignments || []);
         setResults(resultResponse.data.results || []);
+        setSessions(sessionResponse.data.sessions || []);
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -90,6 +92,12 @@ function TherapistPatients() {
         <div className="patient-grid">
           {filteredPatients.map((patient) => {
             const activeExerciseCount = assignments.filter((assignment) => assignment.patient.id === patient.id && assignment.status === 'active').length;
+            const patientSessions = sessions.filter((session) => session.user_id === patient.id);
+            const completedSessionCount = patientSessions.filter((session) => session.status === 'completed').length;
+            const latestSessionAt = patientSessions
+              .map((session) => session.completed_at || session.started_at || session.created_at)
+              .filter(Boolean)
+              .sort((a, b) => new Date(b) - new Date(a))[0];
             const patientResults = results.filter((result) => result.patient.id === patient.id);
             const savedSessions = new Set(patientResults.map((result) => result.session.id));
             const latestCompletedAt = patientResults.map((result) => result.session.completed_at).filter(Boolean).sort((a, b) => new Date(b) - new Date(a))[0];
@@ -109,7 +117,7 @@ function TherapistPatients() {
                 </span>
               </div>
               <span className="patient-card__id">#{patient.id}</span>
-              <div className="patient-card__summary"><span><ClipboardList size={14} /> {activeExerciseCount} active exercise{activeExerciseCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {savedSessions.size} saved session result{savedSessions.size === 1 ? '' : 's'}</span>{latestCompletedAt && <small>Latest result {new Date(latestCompletedAt).toLocaleDateString()}</small>}</div>
+              <div className="patient-card__summary"><span><ClipboardList size={14} /> {activeExerciseCount} active exercise{activeExerciseCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {completedSessionCount} completed session{completedSessionCount === 1 ? '' : 's'}</span><span><Activity size={14} /> {savedSessions.size} saved result{savedSessions.size === 1 ? '' : 's'}</span>{latestSessionAt && <small>Latest session {new Date(latestSessionAt).toLocaleDateString()}</small>}{latestCompletedAt && <small>Latest saved result {new Date(latestCompletedAt).toLocaleDateString()}</small>}</div>
               {latestCheckIn && <div className="patient-card__checkin"><strong>Latest patient check-in</strong><span>Self-reported · {new Date(latestCheckInResult.created_at).toLocaleDateString()}</span><p>Discomfort {latestCheckIn.discomfort_rating}/10 · Effort {latestCheckIn.effort_rating}/10</p></div>}
               <div className="patient-card__actions"><Link to={`/therapist/patients/${patient.id}`}><Button variant="secondary" fullWidth icon={<Eye size={15} />}>Overview</Button></Link><Link to={`/therapist/assign-exercise?patient_id=${patient.id}`}><Button variant="secondary" fullWidth icon={<ClipboardList size={15} />}>Assign exercise</Button></Link></div>
             </Card>
