@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models import Exercise, ExerciseAssignment, PlanExercise, User
@@ -17,11 +18,14 @@ VALID_STATUSES = {
     "completed",
 }
 
+_PLAN_ITEM_UNSET = object()
 
-def serialize_assignment(assignment):
-    plan_item = db.session.scalar(
-        db.select(PlanExercise).where(PlanExercise.assignment_id == assignment.id)
-    )
+
+def serialize_assignment(assignment, plan_item=_PLAN_ITEM_UNSET):
+    if plan_item is _PLAN_ITEM_UNSET:
+        plan_item = db.session.scalar(
+            db.select(PlanExercise).where(PlanExercise.assignment_id == assignment.id)
+        )
     return {
         "id": assignment.id,
         "patient": {
@@ -53,27 +57,21 @@ def serialize_assignment(assignment):
 @assignments_bp.get("/assignments")
 @require_auth
 def get_assignments(user):
+    assignment_query = db.select(ExerciseAssignment).options(
+        selectinload(ExerciseAssignment.patient),
+        selectinload(ExerciseAssignment.therapist),
+        selectinload(ExerciseAssignment.exercise),
+    )
+
     if user.role == "patient":
-        assignments = db.session.scalars(
-            db.select(ExerciseAssignment)
-            .where(
-                ExerciseAssignment.patient_id == user.id
-            )
-            .order_by(
-                ExerciseAssignment.assigned_at.desc()
-            )
-        ).all()
+        assignment_query = assignment_query.where(
+            ExerciseAssignment.patient_id == user.id
+        )
 
     elif user.role == "therapist":
-        assignments = db.session.scalars(
-            db.select(ExerciseAssignment)
-            .where(
-                ExerciseAssignment.therapist_id == user.id
-            )
-            .order_by(
-                ExerciseAssignment.assigned_at.desc()
-            )
-        ).all()
+        assignment_query = assignment_query.where(
+            ExerciseAssignment.therapist_id == user.id
+        )
 
     else:
         return jsonify(
@@ -82,10 +80,26 @@ def get_assignments(user):
             }
         ), 403
 
+    assignments = db.session.scalars(
+        assignment_query.order_by(ExerciseAssignment.assigned_at.desc())
+    ).all()
+    plan_items = db.session.scalars(
+        db.select(PlanExercise).where(
+            PlanExercise.assignment_id.in_([item.id for item in assignments])
+        )
+    ).all() if assignments else []
+    plan_items_by_assignment = {
+        item.assignment_id: item
+        for item in plan_items
+    }
+
     return jsonify(
         {
             "assignments": [
-                serialize_assignment(assignment)
+                serialize_assignment(
+                    assignment,
+                    plan_items_by_assignment.get(assignment.id),
+                )
                 for assignment in assignments
             ]
         }
