@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
@@ -432,6 +433,35 @@ def create_session_result(user, session_id):
                 "error": "result_data must be an object",
             }
         ), 400
+
+    count_fields = (
+        "repetitions",
+        "correct_repetitions",
+        "incorrect_repetitions",
+    )
+    for field in count_fields:
+        value = result_data.get(field)
+        if field in result_data and (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or not 0 <= value <= 100_000
+        ):
+            return jsonify({"error": f"{field} must be a whole number from 0 to 100000"}), 400
+
+    accuracy = result_data.get("accuracy")
+    if "accuracy" in result_data and (
+        isinstance(accuracy, bool)
+        or not isinstance(accuracy, (int, float))
+        or not 0 <= accuracy <= 100
+        or not math.isfinite(accuracy)
+    ):
+        return jsonify({"error": "accuracy must be a finite number from 0 to 100"}), 400
+
+    if all(field in result_data for field in count_fields) and (
+        result_data["correct_repetitions"] + result_data["incorrect_repetitions"]
+        != result_data["repetitions"]
+    ):
+        return jsonify({"error": "correct and incorrect repetitions must add up to total repetitions"}), 400
 
     patient_check_in = result_data.get("patient_check_in")
     if patient_check_in is not None:
