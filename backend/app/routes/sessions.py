@@ -81,10 +81,10 @@ def session_to_dict(session, include_result=False):
     return session_data
 
 
-def session_result_to_dict(result):
+def session_result_to_dict(result, include_therapist_feedback=False):
     session = result.session
 
-    return {
+    result_data = {
         "id": result.id,
         "session_id": result.session_id,
         "result_type": result.result_type,
@@ -115,6 +115,22 @@ def session_result_to_dict(result):
             ),
         },
     }
+
+    if include_therapist_feedback:
+        result_data["therapist_feedback"] = [
+            {
+                "id": feedback.id,
+                "message": feedback.message,
+                "created_at": feedback.created_at.isoformat(),
+                "therapist": {
+                    "id": feedback.therapist.id,
+                    "name": feedback.therapist.name,
+                },
+            }
+            for feedback in session.therapist_feedback
+        ]
+
+    return result_data
 
 
 @sessions_bp.get("/sessions")
@@ -511,7 +527,7 @@ def get_session_results(user):
     return jsonify(
         {
             "results": [
-                session_result_to_dict(result)
+                session_result_to_dict(result, include_therapist_feedback=True)
                 for result in results
             ]
         }

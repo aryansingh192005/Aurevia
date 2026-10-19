@@ -22,7 +22,6 @@ function TherapistResults() {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [feedbackBySession, setFeedbackBySession] = useState({});
   const [drafts, setDrafts] = useState({});
   const [savingSession, setSavingSession] = useState(null);
 
@@ -37,12 +36,6 @@ function TherapistResults() {
 
         const loadedResults = response.data.results || [];
         setResults(loadedResults);
-        const sessionIds = [...new Set(loadedResults.map((result) => result.session.id))];
-        const feedbackResponses = await Promise.all(sessionIds.map(async (id) => {
-          try { return [id, (await api.get(`/sessions/${id}/feedback`)).data.feedback || []]; }
-          catch { return [id, []]; }
-        }));
-        if (isMounted) setFeedbackBySession(Object.fromEntries(feedbackResponses));
       } catch (requestError) {
         if (!isMounted) return;
 
@@ -68,10 +61,11 @@ function TherapistResults() {
     setError('');
     try {
       const response = await api.post(`/sessions/${sessionId}/feedback`, { message });
-      setFeedbackBySession((current) => ({
-        ...current,
-        [sessionId]: [response.data.feedback, ...(current[sessionId] || [])],
-      }));
+      setResults((current) => current.map((result) => (
+        result.session.id === sessionId
+          ? { ...result, therapist_feedback: [response.data.feedback, ...(result.therapist_feedback || [])] }
+          : result
+      )));
       setDrafts((current) => ({ ...current, [sessionId]: '' }));
     } catch (requestError) {
       setError(requestError.response?.data?.error || 'Unable to save therapist feedback.');
@@ -149,7 +143,7 @@ function TherapistResults() {
 
                 <div className="result-therapist-feedback">
                   <strong>Care team notes</strong>
-                  {(feedbackBySession[result.session.id] || []).map((note) => (
+                  {(result.therapist_feedback || []).map((note) => (
                     <p className="result-therapist-feedback__note" key={note.id}>
                       {note.message}<small>{note.therapist.name} · {new Date(note.created_at).toLocaleString()}</small>
                     </p>
